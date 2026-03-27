@@ -1,0 +1,1299 @@
+# AES (Agent-Executable Specification) v1.0
+# File: AES_Planning_Document_Writing_Guide.aes.yaml
+
+# ========== 1. Metadata (REQUIRED) ==========
+meta:
+  task_id: "task_20260327_aes_guide"
+  task_name: "AES 规划文档写作指南 — Agent 专用版"
+  version: "1.1.0"
+  created_at: "2026-03-27T20:00:00Z"
+  updated_at: "2026-03-27T21:00:00Z"
+  from_agent: "system_architect"
+  to_agent: "planning_implementer_agent"
+  session_id: "aes_guide_session_20260327"
+  parent_task_id: null
+  document_type: "reference_guide"
+  target_agents: ["planner", "architect", "implementation_agent"]
+
+# ========== 2. Status (REQUIRED) ==========
+status:
+  current_phase: "planning"
+  completion_percentage: 0
+  last_activity: "2026-03-27T20:00:00Z"
+  completed_items: []
+  pending_items: []
+
+# ========== 3. Intent (REQUIRED) ==========
+intent:
+  original_intent: "创建标准化 AES 规划文档写作指南，确保所有 Agent 写出的规划文档包含完整的执行指令和更新规则"
+  constraints:
+    - "指南必须包含 Layer 1 (AES Core) + Layer 2 (Instructions) + Layer 3 (Plan) 三层结构"
+    - "必须提供具体的文档更新指令和报告追加模板"
+    - "指南本身不执行，只作为参考文档"
+  success_criteria:
+    - "未来规划文档包含完整的实施指令（Layer 2）"
+    - "实施过程文档更新标准化（status/artifacts 更新）"
+    - "Week 实施报告追加格式统一"
+  assumptions:
+    - "Agent 理解 AES v1.0 基础结构"
+    - "项目使用 Python 3.9 和 ./venv/bin/python"
+    - "规划文档存放在 architecture_design/ 目录，扩展名为 .aes.yaml"
+
+# ========== 4. Artifacts (REQUIRED) ==========
+artifacts:
+  files_created:
+    - path: "AES_Planning_Document_Writing_Guide.aes.yaml"
+      description: "本文档本身，AES 格式的写作指南"
+      status: "completed"
+  guide_content: |
+    ========== GUIDE CONTENT ==========
+    
+    ## 1. Core Concept: What is an AES Planning Document
+    
+    An AES Planning Document is a YAML file that serves **two purposes simultaneously**:
+    
+    1. **Planning**: Defines what to do (tasks, priorities, dependencies, acceptance criteria)
+    2. **Instructions**: Tells the implementing agent exactly how to execute, update, and report
+    
+    Without the instruction part, an AES planning document is just a static plan that an agent reads and forgets. With the instruction part, it becomes a **living contract** between planner and implementer.
+    
+    ### The Critical Difference
+    
+    ```
+    # BAD: Static plan only (agent reads, implements, no traceability)
+    plan:
+      week1:
+        - "Implement X"
+        - "Fix Y"
+    
+    # GOOD: Plan + Instructions (agent reads, follows, updates, reports)
+    plan:
+      week1:
+        tasks:
+          - id: "task_1_1"
+            name: "Implement X"
+            steps: ["step a", "step b"]
+            acceptance_criteria: ["test passes"]
+            update_rules:
+              status: "Move from pending to completed after tests pass"
+              artifacts: "Add file to files_created"
+            report: "Append week_implementation_report to this document"
+    ```
+    
+    ---
+    
+    ## 2. When to Create an AES Planning Document
+    
+    Create one when ANY of the following apply:
+    
+    - Starting a new project phase (Phase N planning)
+    - Implementing a major feature or architectural change
+    - Responding to a review/audit report with multiple issues to fix
+    - Any work that spans multiple days and requires traceability
+    - Any work that may be handed off to another agent
+    
+    ### When NOT to Create One
+    
+    - Single bug fix (< 30 minutes)
+    - Trivial refactoring with no risk
+    - Work that can be completed in a single conversation turn
+    
+    ---
+    
+    ## 3. Complete Document Structure
+    
+    An AES planning document has **three layers** stacked in a single YAML file:
+    
+    ```
+    Layer 1: AES Core Sections (1-9)     ← Standard AES v1.0 specification
+    Layer 2: Implementation Instructions   ← THIS GUIDE'S PRIMARY CONTRIBUTION
+    Layer 3: Detailed Plan (Tasks/Weeks)  ← Phase-specific planning content
+    ```
+    
+    ### File Structure Template
+    
+    ```yaml
+    # AES (Agent-Executable Specification) v1.0
+    # File naming: {phase_id}_{descriptive_name}.aes.yaml
+    
+    # ==================== Layer 1: AES Core (REQUIRED) ====================
+    
+    # 1. Metadata
+    meta:
+      task_id: "task_{YYYYMMDD}_{phase_id}"
+      task_name: "Phase N: {Title}"
+      version: "1.0.0"
+      created_at: "{ISO8601}"
+      updated_at: "{ISO8601}"
+      from_agent: "{planner_id}"
+      to_agent: "{implementer_id}"
+      session_id: "{session_id}"
+      parent_task_id: "{parent_id}"           # Link to review report or previous phase
+    
+    # 2. Status
+    status:
+      current_phase: "planning"               # planning|implementation|review|completed
+      completion_percentage: 0                # 0-100
+      last_activity: "{ISO8601}"
+      completed_items: []
+      pending_items:
+        - "Week 1: {summary}"
+        - "Week 2: {summary}"
+        # ...
+    
+    # 3. Intent
+    intent:
+      original_intent: "{Exact user request or objective}"
+      constraints:
+        - "Hard constraint 1"
+        - "Test baseline: {N} tests must pass"
+      success_criteria:
+        - "Measurable success condition 1"
+        - "Score improvement from X to Y"
+      assumptions:
+        - "Assumption 1"
+        - "Previous phase N-1 is complete"
+    
+    # 4. Background (REQUIRED when based_on_review = true)
+    background:
+      based_on_review: true/false           # true if plan responds to a review/audit report
+      review_report_id: "{report_id}"       # Required when based_on_review = true
+      problem_summary: "Summary of key issues from the review report"
+      context_summary: "Why this plan exists and what it aims to solve"
+      stakeholders: ["{stakeholder1}", "{stakeholder2}"]  # Who cares about this plan
+    
+    # 5. References (REQUIRED)
+    references:
+      critical:                             # MUST be read before implementation starts
+        - id: "ref-{shortname}"
+          name: "{Document Name}"
+          path: "{file_path}"
+          purpose: "{Why this document is critical}"
+          required_reading_time: "{duration}"
+          key_sections: "{sections to focus on}"
+      high:                                 # Should be read during implementation
+        - id: "ref-{shortname}"
+          name: "{Document Name}"
+          path: "{file_path}"
+          purpose: "{Purpose}"
+      medium:                               # Optional reading for context
+        - id: "ref-{shortname}"
+          name: "{Document Name}"
+          path: "{file_path}"
+      low:                                  # Background only, not required
+        - id: "ref-{shortname}"
+          name: "{Document Name}"
+          path: "{file_path}"
+    
+    # 6. Artifacts
+    artifacts:
+      files_created: []
+      files_modified: []
+      decisions_made:
+        - decision: "{Decision text}"
+          rationale: "{Why}"
+          alternatives: ["Alternative 1"]
+    
+    # 7. Next Agent Context
+    next_agent_context:
+      relevant_specs:
+        - "{spec_file_path} §{section}"
+      critical_assumptions:
+        - "Assumption that next agent MUST know"
+      hard_constraints:
+        - "Constraint that CANNOT be violated"
+      recommendations:
+        - "Suggested approach"
+      known_pitfalls:
+        - "Trap to avoid"
+      file_context:
+        important_files:
+          - "{file_path}: {what it does}"
+        deprecated_code:
+          - "{file_path}: DO NOT USE or DELETE with reason"
+        configuration:
+          - "{config_location}: {relevant config}"
+    
+    # 8. Governance (RECOMMENDED)
+    governance:
+      audit_trail_id: "{audit_id}"
+      risk_level: "L1-L5"
+      approval_required: []
+    
+    # 9. Risks (RECOMMENDED)
+    risks:
+      - issue: "{Risk description}"
+        severity: "high|medium|low"
+        mitigation: "{Mitigation strategy}"
+        status: "pending|mitigated|accepted"
+    
+    # 10. Evolution (OPTIONAL)
+    evolution:
+      hil_level: "L1-L5"
+      architecture_mode: "Script|Skill|Agent|Multi-Agent"
+      complexity_score: 1-10
+    
+    # 11. Execution Policy (OPTIONAL)
+    execution_policy:
+      model: "default"
+      max_steps: 50
+      tools_allowed: []
+      tools_forbidden: []
+    
+    # ==================== Layer 2: Implementation Instructions (REQUIRED FOR PLANNING) ====================
+    # THIS IS THE MOST IMPORTANT PART — without it, the plan is just a static document.
+    
+    # 2A. Implementation Overview
+    implementation_overview:
+      steps:
+        - step: "0"
+          content: "Prerequisite check"
+          duration: "{time}"
+          priority: "P0"
+          mandatory: true
+        - step: "1"
+          content: "Read core references"
+          duration: "{time}"
+          priority: "P0"
+          mandatory: true
+        - step: "2"
+          content: "Create working branch"
+          duration: "{time}"
+          priority: "P0"
+          mandatory: true
+        # ... step 3+ for each Week/sprint
+    
+    # 2B. Step 0: Prerequisite Check
+    step0_prerequisite_check:
+      environment_check:
+        commands: |
+          # Commands to verify environment
+        expected_results:
+          - "Expected result 1"
+      key_files_check:
+        commands: |
+          # Commands to verify key files exist
+        expected_results:
+          - "Expected result 1"
+      baseline_test_run:
+        commands: |
+          # Commands to run baseline tests
+        expected_results:
+          - "Expected result 1"
+    
+    # 2C. Step 1: Required Reading
+    step1_required_reading:
+      reading_list:
+        - id: "R1"
+          name: "{Document name}"
+          path: "{file path}"
+          key_sections: "{sections to focus on}"
+          duration: "{time}"
+          purpose: "{why read this}"
+    
+    # 2D. Step 2: Create Working Branch
+    step2_create_branch:
+      commands: |
+        git checkout -b {branch_name}
+        git tag {phase}-start-point
+      expected_results:
+        - "Branch created"
+        - "Tag created"
+    
+    # 2E. Documentation Update Instructions (CRITICAL)
+    documentation_update_instructions:
+      purpose: |
+        This document is a living contract. The implementing agent MUST update
+        status and artifacts at each milestone. Week reports MUST be appended.
+      
+      update_frequency: "At completion of each Week/sprint"
+      
+      update_checklist_per_milestone:
+        - "[ ] Update status.current_phase"
+        - "[ ] Update status.completion_percentage"
+        - "[ ] Update status.last_activity (ISO 8601)"
+        - "[ ] Move completed items from pending_items to completed_items"
+        - "[ ] Update artifacts.files_created"
+        - "[ ] Update artifacts.files_modified"
+        - "[ ] Update artifacts.decisions_made (if any)"
+        - "[ ] Update meta.updated_at"
+        - "[ ] Update meta.version (if major change)"
+    
+    # 2F. Milestone/Week Execution Instructions
+    milestone_execution_instructions:
+      milestone_start_checklist:
+        - "[ ] Previous milestone fully complete"
+        - "[ ] All tests passing"
+        - "[ ] Status and artifacts updated"
+        - "[ ] Git tag created"
+      
+      daily_workflow:
+        - "Start: Confirm today's tasks from plan"
+        - "Execute: Follow task steps, test incrementally"
+        - "Commit: Use standardized commit message format"
+        - "End: Run tests, update document status, record blockers"
+      
+      git_commit_format: "{phase}[wX][task-Y-Z]: {description}"
+      
+      milestone_completion_checklist:
+        - "[ ] All tasks in this milestone complete"
+        - "[ ] All unit tests pass"
+        - "[ ] All integration tests pass"
+        - "[ ] Security scan pass (if applicable)"
+        - "[ ] Full regression tests pass"
+        - "[ ] Status and artifacts updated in this document"
+        - "[ ] Git tag created ({phase}-weekX-complete)"
+        - "[ ] Implementation report appended to this document"
+    
+    # 2G. Completion/Final Instructions
+    phase_completion_instructions:
+      final_checklist:
+        - "[ ] All milestones complete"
+        - "[ ] All tracked issues resolved"
+        - "[ ] Full regression tests pass"
+        - "[ ] Performance baseline maintained or improved"
+        - "[ ] Status updated to 'completed'"
+        - "[ ] Completion percentage updated to 100"
+        - "[ ] Git tag {phase}-complete created"
+        - "[ ] Acceptance report generated"
+      
+      final_report_instructions:
+        report_file: "docs/{phase}_acceptance_report.md"
+        report_format: "AES v1.0 YAML"
+        report_sections:
+          - "Summary (score improvement, issue resolution status)"
+          - "Milestone implementation summaries"
+          - "Test results (unit/integration/regression/security)"
+          - "Performance baseline comparison"
+          - "Remaining issues (if any)"
+          - "Recommendations for next phase"
+    
+    # 2H. FAQ
+    faq: []
+    
+    # 2I. Key Decision Points
+    key_decision_points: []
+    
+    # ==================== Layer 3: Detailed Plan ====================
+    
+    # 3A. Problem/Issue Tracking (if from a review)
+    problem_tracking: {}
+    
+    # 3B. Score/Quality Targets (if measurable)
+    score_targets: {}
+    
+    # 3C. Week/Milestone Plans
+    week1:
+      name: "{Week name}"
+      duration: "{duration}"
+      priority: "P0"
+      task_1_1:
+        name: "{Task name}"
+        priority: "P1|P2|P3"
+        description: "{What to do and why}"
+        steps:
+          - "Step 1"
+          - "Step 2"
+        deliverables:
+          - "{file or component}"
+        acceptance_criteria:
+          - "Measurable condition 1"
+          - "Tests pass"
+      task_1_2:
+        # ... next task
+    
+    # 3D. New Directories/Dependencies
+    new_directories: []
+    new_dependencies: []
+    
+    # 3E. Implementation Reports (APPENDED DURING EXECUTION)
+    # week_1_implementation_report: {}
+    # week_2_implementation_report: {}
+    # ...
+    ```
+    
+    ---
+    
+    ## 4. The Implementation Instruction Sections — Deep Dive
+    
+    This section explains each Layer 2 block in detail. These are what make an AES planning document **executable by an agent**.
+    
+    ### 4.1 implementation_overview
+    
+    Purpose: Give implementing agent a quick overview of ALL steps before reading details.
+    
+    ```yaml
+    implementation_overview:
+      steps:
+        - step: "0"
+          content: "Prerequisite check"
+          duration: "1-2 hours"
+          priority: "P0"
+          mandatory: true
+        - step: "1"
+          content: "Read core references"
+          duration: "4 hours"
+          priority: "P0"
+          mandatory: true
+        # Step 2: Create branch
+        # Steps 3..N: One per Week/milestone
+        # Last step: Integration verification and acceptance
+    ```
+    
+    Rules:
+    - Step 0-2 are ALWAYS present (prerequisites, reading, branch)
+    - One step per Week/milestone in detailed plan
+    - Last step is always integration verification
+    - Every step after Step 2 has `mandatory: true` by default
+    - Use `mandatory: false` for optional preparation steps
+    
+    ### 4.2 step0_prerequisite_check
+    
+    Purpose: Verify environment is ready BEFORE any code changes.
+    
+    Three sub-sections, ALL required:
+    
+    ```yaml
+    step0_prerequisite_check:
+      environment_check:
+        commands: |
+          # Environment verification commands
+        expected_results:
+          - "Result 1"
+          - "Result 2"
+      
+      key_files_check:
+        commands: |
+          # File existence checks
+        expected_results:
+          - "File exists"
+      
+      baseline_test_run:
+        commands: |
+          # Baseline test commands
+        expected_results:
+          - "N tests pass, 0 fail"
+    ```
+    
+    Rules:
+    - `commands` must be copy-pasteable bash commands
+    - `expected_results` must be concrete and verifiable (not vague like "works")
+    - Include test exclusion list from AGENTS.md if running pytest
+    - Record baseline test count (this is the regression guard)
+    
+    ### 4.3 step1_required_reading
+    
+    Purpose: Ensure implementing agent understands context before writing code.
+    
+    ```yaml
+    step1_required_reading:
+      reading_list:
+        - id: "R1"
+          name: "{Descriptive name}"
+          path: "{Absolute or relative file path}"
+          key_sections: "{Specific sections to focus on}"
+          duration: "{Estimated time}"
+          purpose: "{Why this is relevant to the plan}"
+    ```
+    
+    Rules:
+    - Maximum 5 items in reading_list (more causes context overflow)
+    - **CRITICAL**: All documents in `references.critical` MUST appear in reading_list
+    - **HIGH**: Documents in `references.high` should appear if space permits
+    - Prioritize: review/audit report first, then theory/design docs
+    - Each item must have a concrete `purpose` linking it to specific tasks
+    - Include AES writing guide itself if agent needs to update this document
+    
+    ### 4.4 documentation_update_instructions
+    
+    Purpose: **THIS IS THE MOST CRITICAL SECTION**. Without it, the agent will not know how to maintain the document as a living artifact.
+    
+    ```yaml
+    documentation_update_instructions:
+      purpose: |
+        Explicit statement that this document must be updated during execution.
+        Be specific about WHAT to update and WHEN.
+      
+      update_frequency: "At completion of each Week/milestone"
+      
+      update_checklist_per_milestone:
+        - "[ ] Update status.current_phase"
+        - "[ ] Update status.completion_percentage"
+        - "[ ] Update status.last_activity (ISO 8601)"
+        - "[ ] Move completed items from pending_items to completed_items"
+        - "[ ] Update artifacts.files_created"
+        - "[ ] Update artifacts.files_modified"
+        - "[ ] Update artifacts.decisions_made (if any)"
+        - "[ ] Update meta.updated_at"
+        - "[ ] Update meta.version (if major change)"
+    ```
+    
+    Rules:
+    - `update_checklist_per_milestone` must have at least 6 items
+    - `completion_percentage` calculation: `(completed_milestones / total_milestones) * 100`
+    - `last_activity` must use ISO 8601 format: `YYYY-MM-DDTHH:MM:SSZ`
+    - If a milestone is partially complete, use fraction: e.g., 3/5 tasks done in Week 2 of 5 weeks = 60%
+    - Status phase progression: `planning` → `implementation` → `review` → `completed`
+    
+    ### 4.5 milestone_execution_instructions
+    
+    Purpose: Standardize how each milestone (Week/sprint) is executed.
+    
+    ```yaml
+    milestone_execution_instructions:
+      milestone_start_checklist:
+        - "[ ] Previous milestone fully complete"
+        - "[ ] All tests passing"
+        - "[ ] Status and artifacts updated in this document"
+        - "[ ] Git tag for previous milestone created"
+      
+      daily_workflow:
+        - "Morning: Confirm today's tasks from plan"
+        - "Execute: Follow task steps, test incrementally"
+        - "Commit: Use standardized commit message format"
+        - "End: Run tests, update document status, record blockers"
+      
+      git_commit_format: "{phase}[wX][task-Y-Z]: {description}"
+      # Example: phase14[w1][task-1-1]: Complete enum unification
+      
+      milestone_completion_checklist:
+        - "[ ] All tasks in this milestone complete"
+        - "[ ] All unit tests pass"
+        - "[ ] All integration tests pass"
+        - "[ ] Security scan pass (if applicable)"
+        - "[ ] Full regression tests pass"
+        - "[ ] Status and artifacts updated in this document"
+        - "[ ] Git tag created ({phase}-weekX-complete)"
+        - "[ ] Implementation report appended to this document"
+    ```
+    
+    Rules:
+    - `git_commit_format` must follow the pattern: `{phase}[wX][task-Y-Z]: {description}`
+    - The milestone completion checklist is a GATE: do not proceed to next milestone without passing all items
+    - The last item ("Implementation report appended") ensures traceability
+    
+    ### 4.6 Implementation Report Template
+    
+    Purpose: Standardize the format of reports appended during execution.
+    
+    The implementing agent must append a report at the end of each milestone. Place the report section BEFORE any static reference sections (like `new_directories` or `new_dependencies`).
+    
+    ```yaml
+    # Appended to this document after Week X completion
+    week_x_implementation_report:
+      start_date: "{YYYY-MM-DD}"
+      end_date: "{YYYY-MM-DD}"
+      completion_percentage: "{N}%"
+      tasks_completed:
+        - task_id: "task_X_Y"
+          name: "{Task name}"
+          status: "completed"
+          actual_duration: "{Actual time spent}"
+          challenges: "{What went wrong}"
+          solutions: "{How it was resolved}"
+      test_results:
+        unit_tests:
+          total: "{N}"
+          passed: "{N}"
+          failed: 0
+        integration_tests:
+          total: "{N}"
+          passed: "{N}"
+          failed: 0
+        regression_tests:
+          baseline: "{N}"
+          passed: "{N}"
+          failed: 0
+      security_scan:
+        tool: "bandit"
+        findings: 0
+        files_scanned: "{N}"
+      git_tags:
+        - "{phase}-weekX-complete"
+      next_milestone_preparation:
+        ready: true
+        blockers: []
+    ```
+    
+    Rules:
+    - Report keys use snake_case
+    - `test_results` must have all three sub-sections (unit/integration/regression)
+    - `challenges` and `solutions` must not be empty (even if "none")
+    - `failed` must be 0 in `regression_tests` (if not 0, milestone is not complete)
+    
+    ### 4.7 phase_completion_instructions
+    
+    Purpose: Define what "done" looks like for the entire phase.
+    
+    ```yaml
+    phase_completion_instructions:
+      final_checklist:
+        - "[ ] All milestones complete"
+        - "[ ] All tracked issues resolved"
+        - "[ ] Full regression tests pass"
+        - "[ ] Performance baseline maintained or improved"
+        - "[ ] Status updated to 'completed'"
+        - "[ ] Completion percentage updated to 100"
+        - "[ ] Git tag {phase}-complete created"
+        - "[ ] Acceptance report generated at docs/{phase}_acceptance_report.md"
+      
+      final_report_instructions:
+        report_file: "docs/{phase}_acceptance_report.md"
+        report_format: "AES v1.0 YAML"
+        report_sections:
+          - "Summary (score improvement, issue resolution status)"
+          - "Milestone implementation summaries"
+          - "Test results (unit/integration/regression/security)"
+          - "Performance baseline comparison"
+          - "Remaining issues (if any)"
+          - "Recommendations for next phase"
+    ```
+    
+    Rules:
+    - `final_checklist` must cover ALL quality gates
+    - The acceptance report is a SEPARATE file in `docs/`, not appended to the planning document
+    - Add a reference to the acceptance report in `meta.acceptance_report` upon completion
+    
+    ### 4.8 faq and key_decision_points
+    
+    Purpose: Pre-answer questions that the implementing agent will inevitably ask.
+    
+    ```yaml
+    faq:
+      - question: "I'm not familiar with this project, where do I start?"
+        answer: |
+          1. Read the review/input report first
+          2. Read theory/design docs
+          3. Run prerequisite checks
+          4. Start with Week 1 Task 1.1
+      
+      - question: "Can I skip or reorder weeks?"
+        answer: "No. Weeks have strict dependency chains."
+      
+      - question: "How do I verify my work?"
+        answer: "Each task has acceptance_criteria. Run them."
+    
+    key_decision_points:
+      - question: "Can I skip {critical task}?"
+        answer: "No."
+        reason: "{Why}"
+        minimum_requirement: "{What must be done at minimum}"
+    ```
+    
+    Rules:
+    - FAQ should cover at least 5 common questions
+    - Decision points should cover irreversible or high-risk choices
+    - Answers must be definitive (not "it depends" without qualification)
+    
+    ---
+    
+    ## 5. Layer 3: Detailed Plan — Best Practices
+    
+    ### 5.1 Problem/Issue Tracking
+    
+    When the plan is based on a review or audit report, include a tracking matrix:
+    
+    ```yaml
+    problem_tracking:
+      p1_issues:
+        - id: "P1-T1"
+          name: "{Issue name}"
+          assigned_milestone: "Week 2"
+          task_ref: "task_2_1"
+          status: "pending"
+      p2_issues:
+        - id: "P2-T1"
+          name: "{Issue name}"
+          assigned_milestone: "Week 1"
+          task_ref: "task_1_3"
+          status: "pending"
+    ```
+    
+    Rules:
+    - Every issue from the source report MUST appear in the tracking matrix
+    - `assigned_milestone` and `task_ref` create bidirectional traceability
+    - `status` is updated to "completed" when the corresponding task passes acceptance criteria
+    
+    ### 5.2 Task Definition
+    
+    Each task must have ALL of the following fields:
+    
+    ```yaml
+    task_1_1:
+      name: "{Concise task title}"           # Required
+      priority: "P1|P2|P3"                   # Required
+      review_item: "P1-T1"                   # Required if from review
+      description: |
+        {What to do, why, and how. 2-5 sentences.}
+      steps:                                  # Required
+        - "Concrete step 1"
+        - "Concrete step 2"
+      deliverables:                           # Required
+        - "{file or component produced}"
+      acceptance_criteria:                    # Required, must be testable
+        - "Specific condition 1"
+        - "Tests pass"
+    ```
+    
+    Rules:
+    - `steps` must be ordered and concrete (not "implement X" but "create file Y with class Z")
+    - `acceptance_criteria` must be binary (pass/fail), not subjective ("looks good")
+    - If a task has sub-tasks that could take > 1 day, split it into separate tasks
+    - Task IDs follow the pattern: `task_{week}_{sequence}` (e.g., task_1_1, task_2_3)
+    
+    ### 5.3 Week/Milestone Structure
+    
+    ```yaml
+    week1:
+      name: "{Descriptive name}"
+      duration: "{5 days}"
+      priority: "P0"
+      review_source: "{Input document reference}"  # If applicable
+      
+      task_1_1: { ... }
+      task_1_2: { ... }
+      
+      task_1_last:
+        name: "Week 1 Integration Verification"
+        priority: "P0"
+        description: "Verify all Week 1 changes"
+        # Always include a verification task as the last task of each week
+    ```
+    
+    Rules:
+    - Last task of EVERY week/milestone MUST be an integration verification task
+    - Week names should be descriptive (not just "Week 1")
+    - If a week has dependencies on the previous week, state them explicitly
+    
+    ### 5.4 Dependencies Between Weeks
+    
+    Define explicit dependencies between milestones:
+    
+    ```yaml
+    week1_instructions:
+      dependencies: "None (previous phase complete)"
+      task_order: "task_1_1 → task_1_2 → task_1_3 → task_1_4 → task_1_5"
+      validation: "Task 1.5 (integration verification) must pass before Week 2"
+    
+    week2_instructions:
+      dependencies: "Week 1 complete + tests pass + git tag phase-week1-complete"
+      task_order: "task_2_1 → task_2_2 → task_2_3 → task_2_4"
+      validation: "Task 2.4 must pass before Week 3"
+      note: "Week 2 resolves P1-T1 and P1-T2"
+    ```
+    
+    ---
+    
+    ## 6. Document Lifecycle
+    
+    ### 6.1 Creation Phase
+    
+    1. Planner agent creates the document with ALL three layers
+    2. Fills Layer 1 (AES core) completely
+    3. Fills Layer 2 (instructions) with project-specific values
+    4. Fills Layer 3 (detailed plan) with tasks, tracking, targets
+    5. Reviews the document for completeness using the validation checklist below
+    
+    ### 6.2 Execution Phase
+    
+    1. Implementing agent reads the document
+    2. Follows Step 0-2 (prerequisites, reading, branch)
+    3. Executes Week/milestone tasks in order
+    4. **At each milestone completion**:
+       a. Runs all tests
+       b. Updates `status` and `artifacts` sections
+       c. Appends implementation report
+       d. Creates git tag
+       e. Updates `problem_tracking` status
+    
+    ### 6.3 Completion Phase
+    
+    1. Runs final integration verification
+    2. Updates status to `completed`, percentage to 100
+    3. Generates acceptance report in `docs/`
+    4. Adds `meta.acceptance_report` reference
+    5. Creates final git tag
+    
+    ### 6.4 Archival Phase
+    
+    1. Document remains in `architecture_design/` as a historical record
+    2. Acceptance report remains in `docs/` as a deliverable
+    3. Next phase's planning document references this one via `parent_task_id`
+    
+    ---
+    
+    ## 7. Validation Checklist
+    
+    Before delivering the planning document to the implementing agent, verify:
+    
+    ### Layer 1 (AES Core)
+    - [ ] `meta` has task_id, task_name, version, from_agent, to_agent, session_id
+    - [ ] `status` has current_phase, completion_percentage, completed_items, pending_items
+    - [ ] `intent` has original_intent, constraints, success_criteria, assumptions
+    - [ ] `background.based_on_review` correctly set (true if plan responds to review)
+    - [ ] `background.review_report_id` provided when based_on_review = true
+    - [ ] `references.critical` contains at least 1 item (must-read documents)
+    - [ ] `references.high/medium/low` appropriately categorized
+    - [ ] `artifacts` has files_created, files_modified, decisions_made
+    - [ ] `next_agent_context` has relevant_specs, critical_assumptions, hard_constraints
+    
+    ### Layer 2 (Instructions) — THIS IS WHAT MAKES IT EXECUTABLE
+    - [ ] `implementation_overview` lists ALL steps with duration and priority
+    - [ ] `step0_prerequisite_check` has environment_check, key_files_check, baseline_test_run
+    - [ ] `step1_required_reading` has reading_list with path, key_sections, purpose
+    - [ ] `step2_create_branch` has concrete git commands
+    - [ ] `documentation_update_instructions` has update_checklist_per_milestone (>= 6 items)
+    - [ ] `milestone_execution_instructions` has start/end checklists, git_commit_format
+    - [ ] `phase_completion_instructions` has final_checklist (>= 8 items) and report instructions
+    - [ ] `faq` has >= 5 questions
+    - [ ] `key_decision_points` covers irreversible/high-risk choices
+    
+    ### Layer 3 (Detailed Plan)
+    - [ ] Every task has: name, priority, description, steps, deliverables, acceptance_criteria
+    - [ ] Last task of every week/milestone is an integration verification task
+    - [ ] Week dependencies are explicitly stated
+    - [ ] `problem_tracking` covers ALL issues from the source report (if applicable)
+    - [ ] `score_targets` has baseline and target values (if measurable)
+    
+    ### Quality
+    - [ ] No vague acceptance_criteria ("looks good", "works" → use specific pass/fail conditions)
+    - [ ] No orphaned tasks (every task belongs to a week/milestone)
+    - [ ] No circular dependencies between weeks
+    - [ ] Git commit format is consistent across all instructions
+    - [ ] File paths in `next_agent_context.file_context` are accurate
+    
+    ---
+    
+    ## 8. Common Mistakes
+    
+    ### Mistake 1: Omitting Layer 2 (Instructions)
+    
+    ```
+    # BAD: Plan without instructions — agent reads and guesses
+    plan:
+      week1: ...
+    
+    # GOOD: Plan with instructions — agent follows precisely
+    plan:
+      week1: ...
+    implementation_overview: ...
+    documentation_update_instructions: ...
+    ```
+    
+    ### Mistake 2: Vague acceptance_criteria
+    
+    ```yaml
+    # BAD
+    acceptance_criteria:
+      - "Code works"
+      - "Tests pass"
+    
+    # GOOD
+    acceptance_criteria:
+      - "2468+ tests pass, 0 fail"
+      - "bandit scan returns 0 findings on new code"
+      - "MCP tools/list returns 8 adaptation.* tools"
+    ```
+    
+    ### Mistake 3: No report merging instructions
+    
+    ```
+    # BAD: Agent finishes work, document is never updated
+    # (Agent has no instruction to update the planning document)
+    
+    # GOOD: Agent knows exactly when and how to update
+    documentation_update_instructions:
+      update_frequency: "At completion of each Week"
+      update_checklist_per_milestone:
+        - "[ ] Update status.current_phase"
+        # ...
+    ```
+    
+    ### Mistake 4: Missing milestone verification task
+    
+    ```yaml
+    # BAD: Week ends without verification
+    week1:
+      task_1_1: { ... }
+      task_1_2: { ... }
+      # No verification → bugs accumulate
+    
+    # GOOD: Last task is always verification
+    week1:
+      task_1_1: { ... }
+      task_1_2: { ... }
+      task_1_3:
+        name: "Week 1 Integration Verification"
+        # Run full tests, update document, create tag
+    ```
+    
+    ### Mistake 5: No baseline test count
+    
+    ```
+    # BAD: "Run tests" without knowing the baseline
+    # If tests drop from 2468 to 2450, agent might not notice
+    
+    # GOOD: Explicit baseline
+    baseline_test_run:
+      expected_results:
+        - "2468 tests pass, 0 fail"
+        - "This is the regression guard — any reduction is a failure"
+    ```
+    
+    ### Mistake 6: Omitting background when plan is based on review
+    
+    ```
+    # BAD: Plan based on review but no background section
+    # Agent doesn't know why this plan exists
+    
+    # GOOD: Clear background linking to review report
+    background:
+      based_on_review: true
+      review_report_id: "report_20260327_system_review"
+      problem_summary: "System review identified 3 P1 issues..."
+      context_summary: "This plan addresses the critical gaps..."
+    ```
+    
+    ### Mistake 7: Unstructured references without prioritization
+    
+    ```yaml
+    # BAD: Flat references list — agent doesn't know what to read first
+    references:
+      - doc1.md
+      - doc2.md
+      - doc3.md
+    
+    # GOOD: Prioritized references with clear purpose
+    references:
+      critical:
+        - id: "ref-sys-review"
+          name: "System Review Report"
+          path: "planning/2026-03-27_SYSTEM_REVIEW_REPORT.md"
+          purpose: "Must read sections 3-5 before starting"
+      high:
+        - id: "ref-phase19"
+          name: "Phase 19 Design"
+          path: "planning/Phase-19_DYNAMIC-EFFECTS-VISUAL-ENHANCEMENT-PLAN.md"
+          purpose: "Understand the design context"
+    ```
+    
+    ---
+    
+    ## 9. Quick Reference Card
+    
+    ```
+    AES Planning Document = Layer 1 (AES Core) + Layer 2 (Instructions) + Layer 3 (Plan)
+    
+    Layer 1 — Standard AES v1.0 (11 sections)
+      §1 meta        §2 status        §3 intent        §4 background
+      §5 references  §6 artifacts     §7 next_agent    §8 governance
+      §9 risks       §10 evolution    §11 execution_policy
+    
+    Layer 2 — Implementation Instructions (THE KEY ADDITION)
+      §2A implementation_overview        §2B step0_prerequisite_check
+      §2C step1_required_reading         §2D step2_create_branch
+      §2E documentation_update_instructions    §2F milestone_execution_instructions
+      §2G phase_completion_instructions  §2H faq   §2I key_decision_points
+    
+    Layer 3 — Detailed Plan
+      §3A problem_tracking    §3B score_targets    §3C week/milestone plans
+      §3D new_directories     §3E implementation_reports (appended during execution)
+    
+    MANDATORY for every planning document:
+      ✅ Layer 1 sections 1-3 (meta, status, intent) + sections 6-7 (artifacts, next_agent_context)
+      ✅ Layer 2 sections 2A-2G (all implementation instructions)
+      ✅ Layer 3 sections 3C (with verification tasks)
+      ✅ Baseline test count in step0
+      ✅ Documentation update checklist
+      ✅ Implementation report template
+    
+    CONDITIONALLY REQUIRED:
+      ⚠️  Layer 1 §4 background (required when based_on_review = true)
+      ⚠️  Layer 1 §5 references (always required, but may be empty)
+    
+    FILE NAMING: {phase_id}_{descriptive_name}.aes.yaml
+    FILE LOCATION: architecture_design/
+    ACCEPTANCE REPORT: docs/{phase_id}_acceptance_report.md
+    GIT TAGS: {phase}-start-point, {phase}-weekX-complete, {phase}-complete
+    ```
+    
+    ---
+    
+    ## 10. Examples
+    
+    ### Example: Minimal Planning Document Structure
+    
+    For a small 2-week feature:
+    
+    ```yaml
+    # AES (Agent-Executable Specification) v1.0
+    
+    meta:
+      task_id: "task_20260327_feature_x"
+      task_name: "Feature X: Description"
+      version: "1.0.0"
+      created_at: "2026-03-27T10:00:00Z"
+      updated_at: "2026-03-27T10:00:00Z"
+      from_agent: "planner"
+      to_agent: "implementer"
+      session_id: "ses_feature_x"
+      parent_task_id: null
+    
+    status:
+      current_phase: "planning"
+      completion_percentage: 0
+      last_activity: "2026-03-27T10:00:00Z"
+      completed_items: []
+      pending_items:
+        - "Week 1: Core implementation"
+        - "Week 2: Testing and documentation"
+    
+    intent:
+      original_intent: "Implement Feature X to solve Problem Y"
+      constraints:
+        - "Must maintain backward compatibility"
+        - "Baseline: 2468 tests must pass"
+      success_criteria:
+        - "Feature X works correctly"
+        - "2468+ tests pass"
+        - "Performance regression < 5%"
+      assumptions:
+        - "Dependencies already installed"
+    
+    artifacts:
+      files_created: []
+      files_modified: []
+      decisions_made: []
+    
+    next_agent_context:
+      relevant_specs:
+        - "docs/design.md §Feature X"
+      critical_assumptions:
+        - "Database schema already has required tables"
+      hard_constraints:
+        - "DO NOT modify existing API signatures"
+      recommendations: []
+      known_pitfalls:
+        - "Cache invalidation bug in module Z"
+      file_context:
+        important_files:
+          - "src/module_z.py: Core module that needs modification"
+        deprecated_code: []
+        configuration: []
+    
+    risks: []
+    
+    implementation_overview:
+      steps:
+        - step: "0"
+          content: "Prerequisite check"
+          duration: "30 minutes"
+          priority: "P0"
+          mandatory: true
+        - step: "1"
+          content: "Read design docs"
+          duration: "1 hour"
+          priority: "P0"
+          mandatory: true
+        - step: "2"
+          content: "Create branch"
+          duration: "5 minutes"
+          priority: "P0"
+          mandatory: true
+        - step: "3"
+          content: "Execute Week 1"
+          duration: "5 days"
+          priority: "P0"
+          mandatory: true
+        - step: "4"
+          content: "Execute Week 2"
+          duration: "5 days"
+          priority: "P0"
+          mandatory: true
+    
+    step0_prerequisite_check:
+      environment_check:
+        commands: |
+          ./venv/bin/python --version
+          pwd
+          git status
+        expected_results:
+          - "Python 3.9"
+          - "Clean working directory"
+      key_files_check:
+        commands: |
+          ls src/module_z.py
+          ./venv/bin/python -m pytest --collect-only
+        expected_results:
+          - "module_z.py exists"
+          - "2468+ tests collected"
+      baseline_test_run:
+        commands: |
+          ./venv/bin/python -m pytest -x --tb=short
+        expected_results:
+          - "2468 tests pass, 0 fail"
+    
+    step1_required_reading:
+      reading_list:
+        - id: "R1"
+          name: "Feature X Design"
+          path: "docs/design.md"
+          key_sections: "§2 Architecture, §3 API"
+          duration: "30 minutes"
+          purpose: "Understand what to implement"
+    
+    step2_create_branch:
+      commands: |
+        git checkout -b feature-x
+        git tag feature-x-start-point
+      expected_results:
+        - "Branch created"
+        - "Tag created"
+    
+    documentation_update_instructions:
+      purpose: |
+        Update this document at each milestone. Append implementation reports.
+      update_frequency: "At completion of each Week"
+      update_checklist_per_milestone:
+        - "[ ] Update status.current_phase"
+        - "[ ] Update status.completion_percentage"
+        - "[ ] Update status.last_activity"
+        - "[ ] Move completed items to completed_items"
+        - "[ ] Update artifacts"
+        - "[ ] Update meta.updated_at"
+    
+    milestone_execution_instructions:
+      milestone_start_checklist:
+        - "[ ] Previous milestone complete"
+        - "[ ] Tests pass"
+        - "[ ] Status updated"
+        - "[ ] Git tag created"
+      daily_workflow:
+        - "Confirm today's tasks"
+        - "Execute with incremental testing"
+        - "Commit: feature_x[wX][task-Y-Z]: description"
+        - "Run tests, update progress"
+      git_commit_format: "feature_x[wX][task-Y-Z]: {description}"
+      milestone_completion_checklist:
+        - "[ ] All tasks complete"
+        - "[ ] Tests pass"
+        - "[ ] Status updated"
+        - "[ ] Git tag created"
+        - "[ ] Implementation report appended"
+    
+    phase_completion_instructions:
+      final_checklist:
+        - "[ ] All weeks complete"
+        - "[ ] 2468+ tests pass"
+        - "[ ] Status = completed, percentage = 100"
+        - "[ ] Acceptance report generated"
+      final_report_instructions:
+        report_file: "docs/feature_x_acceptance_report.md"
+        report_format: "AES v1.0"
+        report_sections:
+          - "Summary"
+          - "Test results"
+          - "Performance comparison"
+          - "Remaining issues"
+    
+    faq:
+      - question: "Where do I start?"
+        answer: "Read docs/design.md, then start Week 1 Task 1.1"
+      - question: "Can I skip Week 1?"
+        answer: "No. Week 2 depends on Week 1."
+    
+    key_decision_points:
+      - question: "Can I change the API?"
+        answer: "No. Must maintain backward compatibility."
+    
+    plan:
+      week1:
+        name: "Core Implementation"
+        duration: "5 days"
+        priority: "P0"
+        task_1_1:
+          name: "Implement core module"
+          priority: "P1"
+          description: "Create the core module with required classes"
+          steps:
+            - "Create src/feature_x/__init__.py"
+            - "Implement CoreClass with methods A, B, C"
+            - "Write unit tests (>= 10 tests)"
+          deliverables:
+            - "src/feature_x/__init__.py"
+            - "tests/unit/test_feature_x.py"
+          acceptance_criteria:
+            - "CoreClass has methods A, B, C"
+            - "10+ unit tests pass"
+        task_1_2:
+          name: "Week 1 Verification"
+          priority: "P0"
+          description: "Run full regression and update document"
+          steps:
+            - "Run full test suite"
+            - "Update status and artifacts"
+            - "Append Week 1 report"
+            - "Create git tag feature-x-week1-complete"
+          deliverables:
+            - "Updated planning document"
+          acceptance_criteria:
+            - "2468+ tests pass"
+            - "Status updated"
+      
+      week2:
+        name: "Integration and Documentation"
+        duration: "5 days"
+        priority: "P0"
+        task_2_1:
+          name: "Integration testing"
+          priority: "P1"
+          description: "Write integration tests and verify end-to-end"
+          steps:
+            - "Write integration tests"
+            - "Run integration + regression"
+          deliverables:
+            - "tests/integration/test_feature_x.py"
+          acceptance_criteria:
+            - "Integration tests pass"
+            - "Regression tests pass"
+        task_2_2:
+          name: "Week 2 Verification and Acceptance"
+          priority: "P0"
+          description: "Final verification and acceptance report"
+          steps:
+            - "Run full regression"
+            - "Generate acceptance report"
+            - "Update document to completed"
+            - "Create git tag feature-x-complete"
+          deliverables:
+            - "docs/feature_x_acceptance_report.md"
+          acceptance_criteria:
+            - "2468+ tests pass"
+            - "Document status = completed"
+    
+    new_directories:
+      - path: "src/feature_x/"
+        description: "Feature X module"
+    
+    new_dependencies: []
+    ```
+    
+    ---
+    
+    ## 11. Relationship to AGENTS.md
+    
+    This guide complements `AGENTS.md` (project-level agent instructions) by providing document-level formatting rules. When writing an AES planning document:
+    
+    - **AGENTS.md** defines: Python interpreter, test commands, exclusions, code style
+    - **This guide** defines: Document structure, instruction format, report template
+    
+    The planning document should reference AGENTS.md for project-specific conventions (e.g., test exclusion list, Python path).
+    
+    ---
+    
+    *Guide Version*: 1.1.0
+    *Created*: 2026-03-27
+    *Updated*: 2026-03-27
+    *Based on*: Phase 13/14 planning experience + Phase 19-25 AES实战
+    *License*: MIT
+    ========== END OF GUIDE CONTENT ==========
