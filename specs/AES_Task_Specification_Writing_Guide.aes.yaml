@@ -1,19 +1,24 @@
-# AES (Agent-Executable Specification) v1.0
-# File: AES_Planning_Document_Writing_Guide.aes.yaml
+# AES (Agent-Executable Specification) v2.0
+# File: AES_Task_Specification_Writing_Guide.aes.yaml
+# Purpose: 定义 AES (Agent-Executable Specification) 作为任务连续性规范，
+#          支持 Planning/Handoff/Execution Report 三种 profile，实现多 Agent 协作、
+#          任务连续性、断点恢复和企业工作流节点化编排
 
 # ========== 1. Metadata (REQUIRED) ==========
 meta:
-  task_id: "task_20260327_aes_guide"
-  task_name: "AES 规划文档写作指南 — Agent 专用版"
-  version: "1.1.0"
+  task_id: "task_20260327_aes_guide_v2"
+  task_name: "AES 任务规范写作指南 — 支持任务连续性与多 Agent 协作"
+  version: "2.0.0"
   created_at: "2026-03-27T20:00:00Z"
   updated_at: "2026-03-27T21:00:00Z"
   from_agent: "system_architect"
-  to_agent: "planning_implementer_agent"
-  session_id: "aes_guide_session_20260327"
+  to_agent: "spec_implementer_agent"
+  session_id: "aes_guide_session_20260327_v2"
   parent_task_id: null
   document_type: "reference_guide"
-  target_agents: ["planner", "architect", "implementation_agent"]
+  target_agents: ["planner", "architect", "implementation_agent", "handoff_agent", "workflow_orchestrator"]
+  aes_profile: "planning"  # planning|handoff|execution_report
+  schema_version: "2.0.0"
 
 # ========== 2. Status (REQUIRED) ==========
 status:
@@ -25,96 +30,204 @@ status:
 
 # ========== 3. Intent (REQUIRED) ==========
 intent:
-  original_intent: "创建标准化 AES 规划文档写作指南，确保所有 Agent 写出的规划文档包含完整的执行指令和更新规则"
+  original_intent: "将 AES 指南从规划文档写作指南升级为生命周期任务规范，支持 Planning/Handoff/Execution Report 三种 profile，实现多 Agent 协作、任务连续性、断点恢复和企业工作流节点化编排"
   constraints:
-    - "指南必须包含 Layer 1 (AES Core) + Layer 2 (Instructions) + Layer 3 (Plan) 三层结构"
-    - "必须提供具体的文档更新指令和报告追加模板"
+    - "指南必须保留 Layer 1/2/3 三层结构，但扩展为支持 profile 机制"
+    - "必须定义 Planning/Handoff/Execution Report 三种 profile 的字段与使用场景"
+    - "必须提供恢复契约、状态快照、工作流节点接口、多 Agent 共建治理等新字段"
+    - "必须包含机器校验规则（schema_version, validation_rules）"
     - "指南本身不执行，只作为参考文档"
   success_criteria:
-    - "未来规划文档包含完整的实施指令（Layer 2）"
-    - "实施过程文档更新标准化（status/artifacts 更新）"
-    - "Week 实施报告追加格式统一"
+    - "AES 定义覆盖 planning、handoff、execution-report 三类用途"
+    - "新 Agent 可依据文档从 0 开始接手（存在完整恢复契约与状态快照）"
+    - "AES 可直接作为企业工作流节点工件（存在输入输出接口和上下游关系字段）"
+    - "规范可被自动校验（存在 schema_version 和 validation_rules）"
+    - "多 Agent 共建规则清晰（存在 collaboration_policy 等字段）"
   assumptions:
-    - "Agent 理解 AES v1.0 基础结构"
-    - "项目使用 Python 3.9 和 ./venv/bin/python"
-    - "规划文档存放在 architecture_design/ 目录，扩展名为 .aes.yaml"
+    - "Agent 理解 AES v2.0 基础结构"
+    - "未来 AES 需要同时服务规划 Agent、执行 Agent、审查 Agent 和接手 Agent"
+    - "企业复杂工作流会把 AES 当成节点工件，而不是仅在项目前期使用一次"
+    - "规范升级采用 profile 和 optional 字段，保持向后兼容"
 
 # ========== 4. Artifacts (REQUIRED) ==========
 artifacts:
   files_created:
-    - path: "AES_Planning_Document_Writing_Guide.aes.yaml"
-      description: "本文档本身，AES 格式的写作指南"
+    - path: "AES_Task_Specification_Writing_Guide.aes.yaml"
+      description: "本文档本身，AES 任务连续性规范写作指南"
       status: "completed"
   guide_content: |
     ========== GUIDE CONTENT ==========
     
-    ## 1. Core Concept: What is an AES Planning Document
+    ## 1. Core Concept: What is an AES (Agent-Executable Specification)
     
-    An AES Planning Document is a YAML file that serves **two purposes simultaneously**:
+    An AES is a YAML file that serves as a **lifecycle-wide task specification**, supporting three primary profiles:
     
-    1. **Planning**: Defines what to do (tasks, priorities, dependencies, acceptance criteria)
-    2. **Instructions**: Tells the implementing agent exactly how to execute, update, and report
+    1. **Planning Profile**: Defines what to do (tasks, priorities, dependencies, acceptance criteria) with execution instructions
+    2. **Handoff/Resume Profile**: Enables task continuity across Agent switches, model failures, or interruptions
+    3. **Execution Report Profile**: Captures implementation results, progress轨迹, and audit trails
     
-    Without the instruction part, an AES planning document is just a static plan that an agent reads and forgets. With the instruction part, it becomes a **living contract** between planner and implementer.
+    Without the handoff and recovery capabilities, an AES document is just a static plan that loses context when Agents change. With full lifecycle support, it becomes a **recoverable task state package** that survives model swaps, handoffs, and enterprise workflow orchestration.
     
-    ### The Critical Difference
+    ### The Three Profiles
     
     ```
-    # BAD: Static plan only (agent reads, implements, no traceability)
-    plan:
-      week1:
-        - "Implement X"
-        - "Fix Y"
+    # Planning Profile (Traditional planning document)
+    aes_profile: "planning"
+    # Contains: meta, status, intent, background, references, artifacts, next_agent_context,
+    #           implementation instructions, detailed plan
     
-    # GOOD: Plan + Instructions (agent reads, follows, updates, reports)
-    plan:
-      week1:
-        tasks:
-          - id: "task_1_1"
-            name: "Implement X"
-            steps: ["step a", "step b"]
-            acceptance_criteria: ["test passes"]
-            update_rules:
-              status: "Move from pending to completed after tests pass"
-              artifacts: "Add file to files_created"
-            report: "Append week_implementation_report to this document"
+    # Handoff/Resume Profile (Task continuity)
+    aes_profile: "handoff"
+    # Adds: state_snapshot, handoff_contract, recovery_policy, last_known_good_state,
+    #        resume_from, model_swap_fallback, boot_order
+    
+    # Execution Report Profile (Implementation results)
+    aes_profile: "execution_report"
+    # Adds: checkpoint_receipts, artifact_registry, integrity_hashes, 
+    #        implementation_summary, quality_metrics, acceptance_evidence
+    ```
+    
+    ### The Critical Evolution: From Planning Document to Task Continuity Spec
+    
+    ```
+    # v1.0: Planning-only document (agent reads, implements, updates)
+    meta:
+      task_name: "Phase N: Planning"
+    
+    # v2.0: Lifecycle task specification (survives handoffs, model swaps, workflow nodes)
+    meta:
+      task_name: "Task Specification: Phase N"
+      aes_profile: "planning"  # planning|handoff|execution_report
+      schema_version: "2.0.0"
+    
+    # New sections for continuity
+    state_snapshot:
+      last_known_good_state: "Week 2 completed, 3/5 tasks done"
+      resume_from: "task_2_4"
+      remaining_work: ["task_2_5", "task_3_1", "task_3_2"]
+    
+    handoff_contract:
+      boot_order: ["read state_snapshot", "verify artifact_registry", "execute resume_from"]
+      forbidden_assumptions: ["Assume model capabilities", "Assume previous Agent's mental state"]
+      must_verify_before_execute: ["baseline_test_count", "artifact_integrity"]
     ```
     
     ---
     
-    ## 2. When to Create an AES Planning Document
+    ## 2. When to Create Which AES Profile
     
-    Create one when ANY of the following apply:
+    ### Planning Profile (aes_profile: "planning")
+    Create a Planning Profile AES when ANY of the following apply:
     
     - Starting a new project phase (Phase N planning)
     - Implementing a major feature or architectural change
     - Responding to a review/audit report with multiple issues to fix
     - Any work that spans multiple days and requires traceability
-    - Any work that may be handed off to another agent
+    - Any work that may be handed off to another agent (start with Planning, then evolve to Handoff)
     
-    ### When NOT to Create One
+    ### Handoff/Resume Profile (aes_profile: "handoff")
+    Create or transition to a Handoff Profile when:
+    
+    - Task execution is interrupted (model failure, context loss, Agent unavailability)
+    - Switching to a different Agent or model for continued execution
+    - Enterprise workflow requires a checkpoint for orchestration
+    - Task needs to survive across multiple sessions or days
+    - You need to preserve state for future resumption
+    
+    ### Execution Report Profile (aes_profile: "execution_report")
+    Create an Execution Report Profile when:
+    
+    - Milestone or phase completion needs formal documentation
+    - Audit trail required for compliance or governance
+    - Implementation results need to be shared with stakeholders
+    - Workflow node outputs need to be certified for downstream consumption
+    
+    ### Profile Evolution
+    A single task may evolve through multiple profiles during its lifecycle. Understanding when and why to transition between profiles is key to maintaining task continuity.
+    
+    #### Trigger Conditions for Profile Transitions
+    
+    **Planning → Handoff/Resume (When task execution is interrupted):**
+    - Model failure or context loss
+    - Agent unavailability (scheduled or unexpected)
+    - Task needs to survive across multiple sessions/days
+    - Enterprise workflow orchestration requires checkpoint
+    - Intentional handoff to specialized Agent
+    
+    **Planning/Handoff → Execution Report (When milestone is completed):**
+    - Phase or milestone completion
+    - Audit trail required for compliance
+    - Results need to be certified for downstream workflow nodes
+    - Formal documentation needed for stakeholders
+    - Implementation results ready for review
+    
+    **Execution Report → Planning (When starting next phase):**
+    - New phase begins (linked via parent_task_id)
+    - Follow-up work identified in acceptance report
+    - Continuous improvement cycle
+    
+    #### Profile Transition Matrix
+    
+    ```
+    ┌──────────────┬─────────────────────┬─────────────────────────┬──────────────────────┐
+    │ From/To      │ Planning            │ Handoff/Resume          │ Execution Report     │
+    ├──────────────┼─────────────────────┼─────────────────────────┼──────────────────────┤
+    │ Planning     │ -                   │ • Interruption          │ • Milestone complete │
+    │              │                     │ • Scheduled handoff     │ • Audit required     │
+    │              │                     │ • Multi-session work    │                      │
+    ├──────────────┼─────────────────────┼─────────────────────────┼──────────────────────┤
+    │ Handoff/     │ • Resume completed  │ -                       │ • Milestone complete │
+    │ Resume       │ • New phase starts  │                         │ • Audit required     │
+    ├──────────────┼─────────────────────┼─────────────────────────┼──────────────────────┤
+    │ Execution    │ • Next phase        │ Not applicable          │ -                    │
+    │ Report       │ • Follow-up work    │                         │                      │
+    └──────────────┴─────────────────────┴─────────────────────────┴──────────────────────┘
+    ```
+    
+    #### Week/Milestone to Profile Mapping
+    
+    Typical progression in a multi-week project:
+    
+    ```
+    Week 1-2 (Planning Profile)    → Task definition, execution plan
+    Week 3 (Handoff Profile)       → Mid-execution checkpoint, state snapshot
+    Week 4-5 (Planning Profile)    → Resume execution (if handed off)
+    Week 6 (Execution Report)      → Milestone completion, audit trail
+    Week 7+ (New Planning Profile) → Next phase planning
+    ```
+    
+    **Key Principle:** A single AES document can evolve through profiles by updating the `aes_profile` field and adding/removing profile-specific sections. The core Layer 1-3 structure remains consistent.
+    
+    ### When NOT to Create an AES
     
     - Single bug fix (< 30 minutes)
     - Trivial refactoring with no risk
     - Work that can be completed in a single conversation turn
+    - Tasks that don't require traceability, handoff, or audit trails
     
     ---
     
     ## 3. Complete Document Structure
     
-    An AES planning document has **three layers** stacked in a single YAML file:
-    
+    An AES v2.0 specification supports **three profiles** (planning, handoff, execution_report) while retaining the three-layer structure:
+
     ```
-    Layer 1: AES Core Sections (1-9)     ← Standard AES v1.0 specification
-    Layer 2: Implementation Instructions   ← THIS GUIDE'S PRIMARY CONTRIBUTION
-    Layer 3: Detailed Plan (Tasks/Weeks)  ← Phase-specific planning content
+    Layer 1: AES Core Sections (1-16)    ← Enhanced with profile-specific sections
+    Layer 2: Implementation Instructions  ← THIS GUIDE'S PRIMARY CONTRIBUTION
+    Layer 3: Detailed Plan (Tasks/Weeks) ← Phase-specific planning content
     ```
+
+    **Profile-aware structure**:
+    - Planning Profile: Uses Layer 1 core sections + Layer 2 + Layer 3
+    - Handoff/Resume Profile: Adds state_snapshot, handoff_contract, recovery_policy
+    - Execution Report Profile: Adds checkpoint_receipts, artifact_registry, validation_rules
     
     ### File Structure Template
     
     ```yaml
-    # AES (Agent-Executable Specification) v1.0
+    # AES (Agent-Executable Specification) v2.0
     # File naming: {phase_id}_{descriptive_name}.aes.yaml
+    # aes_profile: planning|handoff|execution_report (REQUIRED in meta)
     
     # ==================== Layer 1: AES Core (REQUIRED) ====================
     
@@ -122,13 +235,16 @@ artifacts:
     meta:
       task_id: "task_{YYYYMMDD}_{phase_id}"
       task_name: "Phase N: {Title}"
-      version: "1.0.0"
+      version: "2.0.0"
+      schema_version: "2.0.0"                 # AES schema version (must match validation_rules)
       created_at: "{ISO8601}"
       updated_at: "{ISO8601}"
       from_agent: "{planner_id}"
       to_agent: "{implementer_id}"
       session_id: "{session_id}"
       parent_task_id: "{parent_id}"           # Link to review report or previous phase
+      aes_profile: "planning"                 # planning|handoff|execution_report (REQUIRED)
+      target_agents: ["planner", "implementer", "reviewer"]  # Agents who will interact with this spec
     
     # 2. Status
     status:
@@ -213,7 +329,85 @@ artifacts:
           - "{file_path}: DO NOT USE or DELETE with reason"
         configuration:
           - "{config_location}: {relevant config}"
-    
+     
+    # --- Recovery & Handoff Sections (for Handoff/Resume Profile) ---
+
+    # State Snapshot
+    state_snapshot:
+      last_known_good_state: "{Description of last verified state}"
+      resume_from: "{task_id or milestone}"
+      remaining_work: ["{task_id}", "{task_id}"]
+      model_swap_fallback: "{fallback_model_if_primary_fails}"
+
+    # Handoff Contract
+    handoff_contract:
+      boot_order: ["{step1}", "{step2}"]
+      forbidden_assumptions: ["{assumption1}", "{assumption2}"]
+      must_verify_before_execute: ["{verification1}", "{verification2}"]
+      handoff_instructions: "{Special instructions for receiving agent}"
+
+    # Recovery Policy
+    recovery_policy:
+      recovery_scenarios:
+        - scenario: "model_failure"
+          steps: ["{step1}", "{step2}"]
+        - scenario: "context_loss"
+          steps: ["{step1}", "{step2}"]
+      fallback_plan: "{Alternative plan if recovery fails}"
+
+    # --- Workflow Node Sections (for Workflow Node Profile) ---
+
+    # Workflow Interface
+    workflow_interface:
+      input_contract:
+        required_artifacts: ["{artifact1}", "{artifact2}"]
+        required_data: ["{data1}", "{data2}"]
+        quality_gates: ["{gate1}", "{gate2}"]
+      output_contract:
+        produced_artifacts: ["{artifact1}", "{artifact2}"]
+        produced_data: ["{data1}", "{data2}"]
+        quality_metrics: ["{metric1}", "{metric2}"]
+      entry_conditions: ["{condition1}", "{condition2}"]
+      exit_conditions: ["{condition1}", "{condition2}"]
+      downstream_consumers: ["{consumer1}", "{consumer2}"]
+
+    # --- Collaboration & Governance Sections ---
+
+    # Collaboration Policy
+    collaboration_policy:
+      ownership_policy: "{single_owner|shared_ownership|rotating_ownership}"
+      write_ownership: ["{agent_id}", "{agent_id}"]
+      append_only_sections: ["{section1}", "{section2}"]
+      merge_policy: "{last_write_wins|consensus_required|manual_merge}"
+      write_scope: "{global|section_specific|task_specific}"
+
+    # Validation Rules
+    validation_rules:
+      schema_version: "2.0.0"
+      required_fields_by_profile:
+        planning: ["meta", "status", "intent", "artifacts", "next_agent_context"]
+        handoff: ["state_snapshot", "handoff_contract"]
+        execution_report: ["checkpoint_receipts", "artifact_registry"]
+      lint_rules: ["{rule1}", "{rule2}"]
+      allowed_profiles: ["planning", "handoff", "execution_report"]
+
+    # Checkpoint Receipts
+    checkpoint_receipts:
+      - checkpoint_id: "{checkpoint_id}"
+        timestamp: "{ISO8601}"
+        agent_id: "{agent_id}"
+        approval_status: "approved|rejected|pending"
+        artifact_hashes: ["{hash1}", "{hash2}"]
+
+    # Artifact Registry
+    artifact_registry:
+      - artifact_id: "{artifact_id}"
+        path: "{file_path}"
+        hash: "{integrity_hash}"
+        created_at: "{ISO8601}"
+        modified_at: "{ISO8601}"
+        ownership: "{agent_id}"
+
     # 8. Governance (RECOMMENDED)
     governance:
       audit_trail_id: "{audit_id}"
@@ -303,10 +497,17 @@ artifacts:
     # 2E. Documentation Update Instructions (CRITICAL)
     documentation_update_instructions:
       purpose: |
-        This document is a living contract. The implementing agent MUST update
-        status and artifacts at each milestone. Week reports MUST be appended.
+        **CRITICAL ENFORCEMENT**: This document is a living contract and MUST be updated
+        at each milestone. Failure to update status, artifacts, and append week reports
+        constitutes non‑compliance and blocks progression to the next milestone.
+        The agent MUST treat these updates as mandatory P0 tasks, equal in priority to code implementation.
       
       update_frequency: "At completion of each Week/sprint"
+      
+      enforcement: |
+        - These updates are NOT optional; they are part of the task completion criteria.
+        - The milestone_completion_checklist includes verification of this checklist.
+        - If any item is missed, the milestone is NOT complete and must be remedied before proceeding.
       
       update_checklist_per_milestone:
         - "[ ] Update status.current_phase"
@@ -316,6 +517,8 @@ artifacts:
         - "[ ] Update artifacts.files_created"
         - "[ ] Update artifacts.files_modified"
         - "[ ] Update artifacts.decisions_made (if any)"
+        - "[ ] Update problem_tracking status for relevant GAPs"
+        - "[ ] Append week_X_implementation_report to this document"
         - "[ ] Update meta.updated_at"
         - "[ ] Update meta.version (if major change)"
     
@@ -344,6 +547,7 @@ artifacts:
         - "[ ] Status and artifacts updated in this document"
         - "[ ] Git tag created ({phase}-weekX-complete)"
         - "[ ] Implementation report appended to this document"
+        - "[ ] Verify documentation_update_instructions.update_checklist_per_milestone completed"
     
     # 2G. Completion/Final Instructions
     phase_completion_instructions:
@@ -359,7 +563,7 @@ artifacts:
       
       final_report_instructions:
         report_file: "docs/{phase}_acceptance_report.md"
-        report_format: "AES v1.0 YAML"
+        report_format: "AES v2.0 YAML"
         report_sections:
           - "Summary (score improvement, issue resolution status)"
           - "Milestone implementation summaries"
@@ -511,10 +715,17 @@ artifacts:
     ```yaml
     documentation_update_instructions:
       purpose: |
-        Explicit statement that this document must be updated during execution.
-        Be specific about WHAT to update and WHEN.
+        **CRITICAL ENFORCEMENT**: This document is a living contract and MUST be updated
+        at each milestone. Failure to update status, artifacts, and append week reports
+        constitutes non‑compliance and blocks progression to the next milestone.
+        The agent MUST treat these updates as mandatory P0 tasks, equal in priority to code implementation.
       
       update_frequency: "At completion of each Week/milestone"
+      
+      enforcement: |
+        - These updates are NOT optional; they are part of the task completion criteria.
+        - The milestone_completion_checklist includes verification of this checklist.
+        - If any item is missed, the milestone is NOT complete and must be remedied before proceeding.
       
       update_checklist_per_milestone:
         - "[ ] Update status.current_phase"
@@ -565,6 +776,7 @@ artifacts:
         - "[ ] Status and artifacts updated in this document"
         - "[ ] Git tag created ({phase}-weekX-complete)"
         - "[ ] Implementation report appended to this document"
+        - "[ ] Verify documentation_update_instructions.update_checklist_per_milestone completed"
     ```
     
     Rules:
@@ -639,7 +851,7 @@ artifacts:
       
       final_report_instructions:
         report_file: "docs/{phase}_acceptance_report.md"
-        report_format: "AES v1.0 YAML"
+        report_format: "AES v2.0 YAML"
         report_sections:
           - "Summary (score improvement, issue resolution status)"
           - "Milestone implementation summaries"
@@ -982,12 +1194,20 @@ artifacts:
     ## 9. Quick Reference Card
     
     ```
-    AES Planning Document = Layer 1 (AES Core) + Layer 2 (Instructions) + Layer 3 (Plan)
+    AES Task Specification = Layer 1 (AES Core) + Layer 2 (Instructions) + Layer 3 (Plan)
     
-    Layer 1 — Standard AES v1.0 (11 sections)
+    Profiles:
+      • Planning (aes_profile: "planning")       - Task definition & execution plan
+      • Handoff/Resume (aes_profile: "handoff")  - Task continuity & state snapshot
+      • Execution Report (aes_profile: "execution_report") - Results & audit trail
+    
+    Layer 1 — Standard AES v2.0 (Enhanced with profile-specific sections)
       §1 meta        §2 status        §3 intent        §4 background
       §5 references  §6 artifacts     §7 next_agent    §8 governance
       §9 risks       §10 evolution    §11 execution_policy
+      §12 state_snapshot (handoff)   §13 handoff_contract (handoff)
+      §14 recovery_policy (handoff)  §15 checkpoint_receipts (execution_report)
+      §16 artifact_registry (execution_report)
     
     Layer 2 — Implementation Instructions (THE KEY ADDITION)
       §2A implementation_overview        §2B step0_prerequisite_check
@@ -999,7 +1219,7 @@ artifacts:
       §3A problem_tracking    §3B score_targets    §3C week/milestone plans
       §3D new_directories     §3E implementation_reports (appended during execution)
     
-    MANDATORY for every planning document:
+    MANDATORY for every AES task specification:
       ✅ Layer 1 sections 1-3 (meta, status, intent) + sections 6-7 (artifacts, next_agent_context)
       ✅ Layer 2 sections 2A-2G (all implementation instructions)
       ✅ Layer 3 sections 3C (with verification tasks)
@@ -1010,6 +1230,21 @@ artifacts:
     CONDITIONALLY REQUIRED:
       ⚠️  Layer 1 §4 background (required when based_on_review = true)
       ⚠️  Layer 1 §5 references (always required, but may be empty)
+      ⚠️  Profile-specific sections (required when aes_profile matches)
+    
+    PROFILE QUICK REFERENCE:
+    ┌──────────────────┬─────────────────────────────┬─────────────────────────────┐
+    │ Profile          │ When to Use                 │ Key Sections                │
+    ├──────────────────┼─────────────────────────────┼─────────────────────────────┤
+    │ Planning         │ Start new phase             │ All Layer 1-3               │
+    │                  │ Major feature implementation│                             │
+    │ Handoff/Resume   │ Task interruption           │ + state_snapshot            │
+    │                  │ Agent/model switch          │ + handoff_contract          │
+    │                  │ Workflow checkpoint         │ + recovery_policy           │
+    │ Execution Report │ Milestone completion        │ + checkpoint_receipts       │
+    │                  │ Audit trail required        │ + artifact_registry         │
+    │                  │ Workflow node output        │ + validation_rules          │
+    └──────────────────┴─────────────────────────────┴─────────────────────────────┘
     
     FILE NAMING: {phase_id}_{descriptive_name}.aes.yaml
     FILE LOCATION: architecture_design/
@@ -1026,18 +1261,21 @@ artifacts:
     For a small 2-week feature:
     
     ```yaml
-    # AES (Agent-Executable Specification) v1.0
+    # AES (Agent-Executable Specification) v2.0
     
     meta:
       task_id: "task_20260327_feature_x"
       task_name: "Feature X: Description"
-      version: "1.0.0"
+      version: "2.0.0"
+      schema_version: "2.0.0"                 # AES schema version (must match validation_rules)
       created_at: "2026-03-27T10:00:00Z"
       updated_at: "2026-03-27T10:00:00Z"
       from_agent: "planner"
       to_agent: "implementer"
       session_id: "ses_feature_x"
       parent_task_id: null
+      aes_profile: "planning"                 # planning|handoff|execution_report (REQUIRED)
+      target_agents: ["planner", "implementer", "reviewer"]  # Agents who will interact with this spec
     
     status:
       current_phase: "planning"
@@ -1180,6 +1418,7 @@ artifacts:
         - "[ ] Status updated"
         - "[ ] Git tag created"
         - "[ ] Implementation report appended"
+        - "[ ] Verify documentation_update_instructions.update_checklist_per_milestone completed"
     
     phase_completion_instructions:
       final_checklist:
@@ -1189,7 +1428,7 @@ artifacts:
         - "[ ] Acceptance report generated"
       final_report_instructions:
         report_file: "docs/feature_x_acceptance_report.md"
-        report_format: "AES v1.0"
+        report_format: "AES v2.0"
         report_sections:
           - "Summary"
           - "Test results"
@@ -1278,9 +1517,335 @@ artifacts:
     new_dependencies: []
     ```
     
+    ### Example: Minimal Handoff/Resume Profile
+    
+    When a task is interrupted and needs to be handed off to another Agent:
+    
+    ```yaml
+    # AES (Agent-Executable Specification) v2.0
+    # aes_profile: handoff
+    
+    meta:
+      task_id: "task_20260327_feature_x_handoff"
+      task_name: "Feature X: Handoff after Week 1"
+      version: "2.0.0"
+      schema_version: "2.0.0"
+      created_at: "2026-03-27T10:00:00Z"
+      updated_at: "2026-04-03T15:30:00Z"  # Updated at handoff time
+      from_agent: "implementation_agent_1"
+      to_agent: "implementation_agent_2"
+      session_id: "ses_feature_x_handoff"
+      parent_task_id: "task_20260327_feature_x"
+      aes_profile: "handoff"
+      target_agents: ["implementation_agent", "handoff_agent", "reviewer"]
+    
+    status:
+      current_phase: "implementation"
+      completion_percentage: 40
+      last_activity: "2026-04-03T15:30:00Z"
+      completed_items:
+        - "Week 1: Core implementation"
+      pending_items:
+        - "Week 2: Testing and documentation"
+        - "Week 2 Verification and Acceptance"
+    
+    # Core planning sections (abbreviated - same as planning profile)
+    intent:
+      original_intent: "Implement Feature X to solve Problem Y"
+      constraints: ["Must maintain backward compatibility", "Baseline: 2468 tests must pass"]
+      success_criteria: ["Feature X works correctly", "2468+ tests pass", "Performance regression < 5%"]
+      assumptions: ["Dependencies already installed"]
+    
+    # --- Handoff-specific sections ---
+    
+    state_snapshot:
+      last_known_good_state: "Week 1 completed, core module implemented, 10 unit tests pass"
+      resume_from: "task_2_1"  # Task ID from week2 plan
+      remaining_work: ["task_2_1", "task_2_2"]
+      completed_work: ["task_1_1", "task_1_2"]
+      artifacts_ready_for_handoff:
+        - path: "src/feature_x/__init__.py"
+          integrity_hash: "sha256:abc123..."
+          verified: true
+        - path: "tests/unit/test_feature_x.py"
+          integrity_hash: "sha256:def456..."
+          verified: true
+    
+    handoff_contract:
+      boot_order:
+        - "Read state_snapshot to understand current state"
+        - "Verify artifact_registry integrity hashes"
+        - "Execute resume_from task (task_2_1)"
+        - "Continue with remaining_work list"
+      forbidden_assumptions:
+        - "Assume model capabilities of previous agent"
+        - "Assume previous agent's mental state or unrecorded context"
+      must_verify_before_execute:
+        - "Baseline test count (2468 tests still pass)"
+        - "Artifact integrity hashes match"
+        - "No side-effects from interrupted execution"
+      handoff_instructions: |
+        Previous agent was interrupted during integration testing.
+        All Week 1 deliverables are complete and verified.
+        Start with task_2_1 (integration testing) and proceed through remaining_work.
+    
+    recovery_policy:
+      rollback_on_failure: true
+      rollback_target: "task_1_2_complete"  # Git tag or checkpoint
+      fallback_agents: ["implementation_agent_1", "supervisor_agent"]
+      max_retries: 3
+      retry_delay_seconds: 300
+    
+    # Other sections (abbreviated for brevity)
+    artifacts:
+      files_created: ["src/feature_x/__init__.py", "tests/unit/test_feature_x.py"]
+      files_modified: []
+      decisions_made: ["Used approach A for core module implementation"]
+    
+    next_agent_context:
+      relevant_specs: ["docs/design.md §Feature X"]
+      critical_assumptions: ["Database schema already has required tables"]
+      hard_constraints: ["DO NOT modify existing API signatures"]
+      recommendations: ["Review integration test design before proceeding"]
+      known_pitfalls: ["Cache invalidation bug in module Z"]
+    
+    # Implementation instructions and plan sections continue...
+    # (Same structure as planning profile, but starting from week2)
+    ```
+    
+    ### Example: Minimal Execution Report Profile
+    
+    When a milestone is completed and results need to be documented:
+    
+    ```yaml
+    # AES (Agent-Executable Specification) v2.0
+    # aes_profile: execution_report
+    
+    meta:
+      task_id: "task_20260327_feature_x_report"
+      task_name: "Feature X: Completion Report"
+      version: "2.0.0"
+      schema_version: "2.0.0"
+      created_at: "2026-03-27T10:00:00Z"
+      updated_at: "2026-04-10T18:00:00Z"  # Updated at completion
+      from_agent: "implementation_agent"
+      to_agent: "reviewer"
+      session_id: "ses_feature_x_complete"
+      parent_task_id: "task_20260327_feature_x"
+      aes_profile: "execution_report"
+      target_agents: ["reviewer", "stakeholder", "workflow_orchestrator"]
+    
+    status:
+      current_phase: "completed"
+      completion_percentage: 100
+      last_activity: "2026-04-10T18:00:00Z"
+      completed_items:
+        - "Week 1: Core implementation"
+        - "Week 2: Testing and documentation"
+        - "Week 2 Verification and Acceptance"
+      pending_items: []
+    
+    # Core planning sections (abbreviated)
+    intent:
+      original_intent: "Implement Feature X to solve Problem Y"
+      constraints: ["Must maintain backward compatibility", "Baseline: 2468 tests must pass"]
+      success_criteria: ["Feature X works correctly", "2468+ tests pass", "Performance regression < 5%"]
+      assumptions: ["Dependencies already installed"]
+    
+    # --- Execution Report-specific sections ---
+    
+    checkpoint_receipts:
+      - checkpoint_id: "week1_complete"
+        timestamp: "2026-04-03T15:30:00Z"
+        verified_by: "implementation_agent_1"
+        artifacts_snapshot:
+          - path: "src/feature_x/__init__.py"
+            integrity_hash: "sha256:abc123..."
+          - path: "tests/unit/test_feature_x.py"
+            integrity_hash: "sha256:def456..."
+        test_results:
+          baseline_tests: 2468
+          passing_tests: 2468
+          failing_tests: 0
+          new_tests_added: 10
+      - checkpoint_id: "week2_complete"
+        timestamp: "2026-04-10T18:00:00Z"
+        verified_by: "implementation_agent_2"
+        artifacts_snapshot:
+          - path: "tests/integration/test_feature_x.py"
+            integrity_hash: "sha256:ghi789..."
+          - path: "docs/feature_x_acceptance_report.md"
+            integrity_hash: "sha256:jkl012..."
+        test_results:
+          baseline_tests: 2468
+          passing_tests: 2478  # 10 new tests added
+          failing_tests: 0
+          new_tests_added: 10
+    
+    artifact_registry:
+      - id: "artifact_core_module"
+        path: "src/feature_x/__init__.py"
+        description: "Core module for Feature X"
+        created_at: "2026-04-03T10:00:00Z"
+        modified_at: "2026-04-03T14:00:00Z"
+        integrity_hash: "sha256:abc123..."
+        verified: true
+        dependencies: []
+      - id: "artifact_unit_tests"
+        path: "tests/unit/test_feature_x.py"
+        description: "Unit tests for Feature X"
+        created_at: "2026-04-03T15:00:00Z"
+        modified_at: "2026-04-03T15:00:00Z"
+        integrity_hash: "sha256:def456..."
+        verified: true
+        dependencies: ["artifact_core_module"]
+      - id: "artifact_integration_tests"
+        path: "tests/integration/test_feature_x.py"
+        description: "Integration tests for Feature X"
+        created_at: "2026-04-10T16:00:00Z"
+        modified_at: "2026-04-10T17:00:00Z"
+        integrity_hash: "sha256:ghi789..."
+        verified: true
+        dependencies: ["artifact_core_module", "artifact_unit_tests"]
+      - id: "artifact_acceptance_report"
+        path: "docs/feature_x_acceptance_report.md"
+        description: "Acceptance report for Feature X"
+        created_at: "2026-04-10T18:00:00Z"
+        modified_at: "2026-04-10T18:00:00Z"
+        integrity_hash: "sha256:jkl012..."
+        verified: true
+        dependencies: ["artifact_core_module", "artifact_unit_tests", "artifact_integration_tests"]
+    
+    validation_rules:
+      profile_specific_sections:
+        planning: ["meta", "status", "intent", "artifacts", "next_agent_context", "implementation_overview", "plan"]
+        handoff: ["state_snapshot", "handoff_contract", "recovery_policy"]
+        execution_report: ["checkpoint_receipts", "artifact_registry", "validation_rules"]
+      allowed_profiles: ["planning", "handoff", "execution_report"]
+      mandatory_for_all:
+        - "meta"
+        - "status"
+        - "intent"
+        - "artifacts"
+        - "next_agent_context"
+    
+    implementation_summary:
+      total_duration_days: 10
+      actual_start_date: "2026-03-27"
+      actual_completion_date: "2026-04-10"
+      total_agents_involved: 2
+      handoff_count: 1
+      total_commits: 24
+      lines_added: 1247
+      lines_removed: 89
+    
+    quality_metrics:
+      test_coverage_percentage: 92
+      performance_regression_percentage: 2.3
+      code_complexity_score: 15
+      documentation_completeness_score: 88
+    
+    acceptance_evidence:
+      - type: "test_results"
+        description: "All 2478 tests pass (baseline 2468 + 10 new)"
+        verified_by: "implementation_agent_2"
+        timestamp: "2026-04-10T17:30:00Z"
+      - type: "performance_test"
+        description: "Performance regression < 5% requirement met (actual 2.3%)"
+        verified_by: "implementation_agent_2"
+        timestamp: "2026-04-10T17:45:00Z"
+      - type: "code_review"
+        description: "Code review completed, no critical issues found"
+        verified_by: "reviewer_agent"
+        timestamp: "2026-04-10T18:00:00Z"
+      - type: "acceptance_report"
+        description: "Acceptance report generated and signed off"
+        verified_by: "stakeholder"
+        timestamp: "2026-04-10T18:00:00Z"
+    
+    # Other sections abbreviated...
+    ```
+    
     ---
     
-    ## 11. Relationship to AGENTS.md
+    ## 11. Frequently Asked Questions (FAQ)
+    
+    ### Profile Selection & Usage
+    
+    **Q1: When should I use Planning vs. Handoff vs. Execution Report profile?**
+    - Use **Planning** when starting a new phase, implementing a major feature, or responding to a review with multiple issues.
+    - Use **Handoff** when task execution is interrupted, switching Agents/models, or preserving state across sessions.
+    - Use **Execution Report** when a milestone is complete, audit trail is needed, or results need certification.
+    
+    **Q2: Can a single AES document change profiles during its lifecycle?**
+    Yes. Update the `aes_profile` field and add/remove profile-specific sections. Example evolution:
+    1. Start as Planning Profile (`aes_profile: "planning"`)
+    2. If interrupted, update to Handoff Profile (`aes_profile: "handoff"`) and add `state_snapshot`, `handoff_contract`
+    3. When complete, update to Execution Report Profile (`aes_profile: "execution_report"`) and add `checkpoint_receipts`, `artifact_registry`
+    
+    **Q3: What's the minimum required for each profile?**
+    - **Planning**: All Layer 1-3 core sections (meta, status, intent, artifacts, next_agent_context, implementation instructions, plan)
+    - **Handoff**: All Planning sections PLUS `state_snapshot`, `handoff_contract`, `recovery_policy`
+    - **Execution Report**: All Planning sections PLUS `checkpoint_receipts`, `artifact_registry`, `validation_rules`
+    
+    ### Handoff & Recovery
+    
+    **Q4: What should be included in `state_snapshot` for effective handoff?**
+    - `last_known_good_state`: Human-readable description of current state
+    - `resume_from`: Exact task ID or checkpoint to continue from
+    - `remaining_work`: List of pending tasks
+    - `completed_work`: List of completed tasks
+    - `artifacts_ready_for_handoff`: Verified artifacts with integrity hashes
+    
+    **Q5: How do I ensure a smooth handoff between different AI models?**
+    - Use `handoff_contract.boot_order` to specify exact startup sequence
+    - List all `forbidden_assumptions` (e.g., "Don't assume previous model's capabilities")
+    - Include `must_verify_before_execute` checklist (tests, artifact integrity)
+    - Provide clear `handoff_instructions` with context about interruption
+    
+    **Q6: What recovery policies should I set for critical tasks?**
+    - `rollback_on_failure: true` for tasks that can't leave system in broken state
+    - `rollback_target`: Git tag or checkpoint to revert to
+    - `fallback_agents`: Alternative agents if primary fails
+    - `max_retries` and `retry_delay_seconds` for automatic recovery
+    
+    ### Execution Report & Validation
+    
+    **Q7: What evidence should be captured in `checkpoint_receipts`?**
+    - Timestamp and agent who verified the checkpoint
+    - Artifact snapshot with integrity hashes
+    - Test results (baseline vs. current counts)
+    - Any quality metrics collected at that point
+    
+    **Q8: How detailed should `artifact_registry` be?**
+    Include all significant artifacts: source files, tests, documentation, configuration.
+    Each entry should have: path, description, creation/modification times, integrity hash, verification status, and dependencies.
+    
+    **Q9: What validation rules ensure AES document consistency?**
+    - `validation_rules.profile_specific_sections`: Map profiles to required sections
+    - `validation_rules.allowed_profiles`: Valid values for `aes_profile`
+    - `validation_rules.mandatory_for_all`: Sections required regardless of profile
+    
+    ### General Questions
+    
+    **Q10: How does AES relate to AGENTS.md and project conventions?**
+    - **AES**: Document structure, task specification, continuity features
+    - **AGENTS.md**: Project-specific commands, test suites, code style, environment
+    - Always reference AGENTS.md for execution details (Python path, test commands)
+    
+    **Q11: Can I use AES for very small tasks (under 30 minutes)?**
+    Not recommended. AES is designed for tasks requiring traceability, handoff, or audit trails.
+    For small fixes, use regular conversation or simple checklists.
+    
+    **Q12: How should I version AES documents?**
+    - `version`: Document version (e.g., "2.0.0")
+    - `schema_version`: AES schema version (must match `validation_rules`)
+    - Update `meta.updated_at` on every significant change
+    - Use `parent_task_id` to link related documents across phases
+    
+    ---
+    
+    ## 12. Relationship to AGENTS.md
     
     This guide complements `AGENTS.md` (project-level agent instructions) by providing document-level formatting rules. When writing an AES planning document:
     
@@ -1291,9 +1856,145 @@ artifacts:
     
     ---
     
-    *Guide Version*: 1.1.0
+    ## Appendix A: Tooling Examples (Optional)
+    
+    ### JSON Schema Starter Template
+    
+    For teams wanting to validate AES documents programmatically, here's a minimal JSON Schema starter:
+    
+    ```json
+    {
+      "$schema": "http://json-schema.org/draft-2020-12/schema",
+      "$id": "https://example.com/aes-schema/v2.0.json",
+      "title": "AES (Agent-Executable Specification) v2.0",
+      "description": "Schema for validating AES task specifications",
+      "type": "object",
+      "properties": {
+        "meta": {
+          "type": "object",
+          "properties": {
+            "task_id": { "type": "string", "pattern": "^task_\\d{8}_[a-zA-Z0-9_-]+$" },
+            "task_name": { "type": "string" },
+            "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
+            "schema_version": { "type": "string", "const": "2.0.0" },
+            "aes_profile": {
+              "type": "string",
+              "enum": ["planning", "handoff", "execution_report"]
+            },
+            "created_at": { "type": "string", "format": "date-time" },
+            "updated_at": { "type": "string", "format": "date-time" }
+          },
+          "required": ["task_id", "task_name", "version", "schema_version", "aes_profile", "created_at", "updated_at"],
+          "additionalProperties": true
+        },
+        "status": {
+          "type": "object",
+          "properties": {
+            "current_phase": { "type": "string" },
+            "completion_percentage": { "type": "number", "minimum": 0, "maximum": 100 }
+          },
+          "required": ["current_phase", "completion_percentage"],
+          "additionalProperties": true
+        },
+        "intent": {
+          "type": "object",
+          "properties": {
+            "original_intent": { "type": "string" },
+            "constraints": { "type": "array", "items": { "type": "string" } },
+            "success_criteria": { "type": "array", "items": { "type": "string" } }
+          },
+          "required": ["original_intent", "constraints", "success_criteria"],
+          "additionalProperties": true
+        }
+      },
+      "required": ["meta", "status", "intent"],
+      "additionalProperties": true,
+      "if": {
+        "properties": { "meta": { "properties": { "aes_profile": { "const": "handoff" } } } }
+      },
+      "then": {
+        "required": ["state_snapshot", "handoff_contract", "recovery_policy"]
+      },
+      "else": {
+        "if": {
+          "properties": { "meta": { "properties": { "aes_profile": { "const": "execution_report" } } } }
+        },
+        "then": {
+          "required": ["checkpoint_receipts", "artifact_registry", "validation_rules"]
+        }
+      }
+    }
+    ```
+    
+    ### Lint Rule Example (Python)
+    
+    Simple Python script to check AES document structure:
+    
+    ```python
+    # aes_lint.py - Basic structural validation for AES documents
+    import yaml
+    import sys
+    
+    REQUIRED_SECTIONS = ["meta", "status", "intent", "artifacts", "next_agent_context"]
+    
+    PROFILE_SPECIFIC = {
+        "handoff": ["state_snapshot", "handoff_contract", "recovery_policy"],
+        "execution_report": ["checkpoint_receipts", "artifact_registry", "validation_rules"]
+    }
+    
+    def lint_aes(filepath):
+        with open(filepath, 'r') as f:
+            doc = yaml.safe_load(f)
+        
+        errors = []
+        
+        # Check required sections
+        for section in REQUIRED_SECTIONS:
+            if section not in doc:
+                errors.append(f"Missing required section: {section}")
+        
+        # Check profile-specific sections
+        profile = doc.get("meta", {}).get("aes_profile")
+        if profile in PROFILE_SPECIFIC:
+            for section in PROFILE_SPECIFIC[profile]:
+                if section not in doc:
+                    errors.append(f"Profile '{profile}' requires section: {section}")
+        
+        # Check schema_version matches
+        schema_version = doc.get("meta", {}).get("schema_version")
+        if schema_version != "2.0.0":
+            errors.append(f"schema_version should be '2.0.0', got '{schema_version}'")
+        
+        return errors
+    
+    if __name__ == "__main__":
+        if len(sys.argv) != 2:
+            print("Usage: python aes_lint.py <aes_file.yaml>")
+            sys.exit(1)
+        
+        errors = lint_aes(sys.argv[1])
+        if errors:
+            print(f"❌ {len(errors)} validation errors found:")
+            for err in errors:
+                print(f"  - {err}")
+            sys.exit(1)
+        else:
+            print("✅ AES document structure is valid")
+            sys.exit(0)
+    ```
+    
+    ### Usage Recommendations
+    
+    1. **Start simple**: Use the lint script for basic validation during development.
+    2. **Gradual adoption**: Add JSON Schema validation in CI/CD pipelines once team is comfortable.
+    3. **Profile awareness**: Ensure tooling respects profile-specific section requirements.
+    4. **Customization**: Extend with project-specific rules (e.g., required test counts, naming conventions).
+    
+    ---
+    
+    *Guide Version*: 1.2.0
     *Created*: 2026-03-27
-    *Updated*: 2026-03-27
+    *Updated*: 2026-03-28
     *Based on*: Phase 13/14 planning experience + Phase 19-25 AES实战
     *License*: MIT
     ========== END OF GUIDE CONTENT ==========
