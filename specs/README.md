@@ -1,69 +1,89 @@
-# Agent 可执行规范（AES）文档
-本目录包含 **AES（Agent-Executable Specification）** 格式的机器可读规范，专为 AI Agent 设计，支持多 Agent 协作中的任务连续性与断点恢复。
-## 背景与问题
-在使用编程 Agent 进行项目开发时，面临的核心挑战：
-- **上下文窗口限制**：Agent 的上下文容量有限，长时间任务需要压缩或丢弃历史信息
-- **任务连续性丢失**：阶段转换时，前序任务的上下文、决策逻辑、实施细节可能丢失
-- **断点恢复困难**：项目中断后，新 Agent 难以从精确断点继续工作
-## AES 解决方案
-AES 文档采用 **三层结构** 解决上述问题：
-### 1. Layer 1: AES Core（审查背景）
-- 任务起源、约束条件、成功标准
-- 引用文献与参考资料
-- 关键假设与已知风险
-### 2. Layer 2: Implementation Instructions（实施指令）
-- 给下一个接手 Agent 的明确指令
-- 环境检查、必要文件验证步骤
-- 详细的分步工作规划（Week-by-Week）
-### 3. Layer 3: Plan & Artifacts（工作规划与产出）
-- 具体任务分解与交付物定义
-- Agent 实施报告的标准化追加格式
-- 状态跟踪与进度更新机制
-## 核心文件
-| 文件 | 用途 | 设计哲学 |
-|------|------|----------|
-| `AES_Planning_Document_Writing_Guide.aes.yaml` | **Agent 规划文档写作指南** - 如何创建标准化的 AES 文档 | "纯 Agent 可读的最高效文字" - 避免人类可读性装饰，最大化 Agent 解析效率 |
-## 关键特性
-### 🎯 断点恢复支持
-任何 Agent 可从文档的任何断点开始工作，无需重新理解整个项目历史。
-### 📝 上下文继承
-每个阶段自动继承前序阶段的：审查背景、约束条件、成功标准、已知风险。
-### 🔄 实施报告标准化
-Agent 每完成一项工作，必须按标准格式将实施报告追加到文档尾部，形成完整的执行轨迹。
-### 🏗️ 架构相变支持
-支持从 Script → Skill → Agent → Multi-Agent 的架构演化，文档结构自适应调整。
-## 使用场景
-1. **多阶段项目规划**：复杂项目分解为多个可独立执行的 AES 文档
-2. **多 Agent 协作**：不同 Agent 按 AES 文档交接工作
-3. **长期任务维护**：项目中断数月后，新 Agent 可立即从断点继续
-4. **知识传承**：项目的设计决策、实施逻辑以机器可读格式保存
-## 文件格式说明
-AES 文档采用 YAML 格式，包含严格定义的字段结构：
-- **meta**：文档元数据（任务ID、版本、创建者、目标Agent）
-- **intent**：原始意图、约束条件、成功标准
-- **status**：当前状态、完成百分比、待办事项
-- **artifacts**：已创建的文件、产出物
-- **governance**：治理规则、审批流程
-- **implementation_instructions**：具体的实施步骤与命令
-## 与 DACES 理论的关系
-AES 是 **DACES（动态适应与协同演化系统）理论** 的实践产物：
-- **DACES 理论**：方法论框架（`methodological_framework_and_working_paper.md`）
-- **AES 规范**：具体实现格式（本目录文件）
-- **关系**：AES 将 DACES 的"动态适应"理念编码为机器可执行规范
-## 目标读者
-### 🤖 **AI Agent**
-- 直接读取、解析、执行 AES 文档
-- 按文档指令完成规划、实施、报告工作
-- 保持与文档的状态同步
-### 👨‍💻 **开发者/研究者**
-- 理解多 Agent 协作的规范设计
-- 参考 AES 格式为自己的 Agent 系统创建类似规范
-- 学习机器可读规范的最佳实践
-## 下一步
-1. **Agent 使用**：将 `AES_Planning_Document_Writing_Guide.aes.yaml` 提供给规划 Agent
-2. **创建规划**：Agent 按指南为你的项目创建具体的 AES 规划文档
-3. **执行与报告**：Agent 按文档执行，并标准化追加实施报告
-4. **断点测试**：项目中断后，用新 Agent 测试从断点恢复的能力
+# AES (Agent-Executable Specification) 任务规范
+
+**多 Agent 系统的任务连续性规范** — 让任务在 Agent 间无缝传递、断点恢复、持续演进。
+
 ---
-*最后更新：2026-03-27*  
-*基于 DACES 理论 v2.2 + AES 实战经验*
+
+## 核心价值
+
+**解决多 Agent 协作的「任务失忆症」**
+
+当多个 Agent 接力完成一个任务时，传统自然语言对话交接存在严重问题：
+- Agent 切换时，之前的决策记录丢失
+- 长任务链中，信息逐层衰减
+- 中断后无法精确从断点继续
+
+AES 通过**结构化的任务状态包**，让任务本身变成可序列化、可交接、可恢复的「接力棒」。
+
+---
+
+## 三种状态
+
+| 状态 | 用途 | 关键字段 |
+|------|------|----------|
+| **Planning** | 启动新任务/阶段 | intent, success_criteria, implementation_overview |
+| **Handoff/Resume** | 中断交接/断点恢复 | state_snapshot, handoff_contract, recovery_policy |
+| **Execution Report** | 里程碑完成/审计追踪 | checkpoint_receipts, artifact_registry, validation_rules |
+
+---
+
+## 生态定位
+
+```
+A2A (Agent-to-Agent)     → Agent 间通信与委派
+MCP (Model Context)       → 工具连接与调用
+AES (Agent-Executable)    → 任务背景、约束、交接、进度、报告、断点恢复
+```
+
+**简单理解**：
+- A2A = 怎么说话
+- MCP = 用什么工具  
+- AES = 任务是什么、做到哪了
+
+---
+
+## 典型工作流
+
+```
+Agent A (规划) ──创建 Planning AES──→ Agent B (实施)
+                                            │
+                                        (中断/切换)
+                                            ↓
+Agent C (恢复) ←──加载 Handoff AES───── Agent B
+                                            │
+                                        (完成)
+                                            ↓
+Agent D (验收) ──生成 Report AES─────────┘
+```
+
+---
+
+## 文档结构
+
+```
+AES 文档 = Layer 1 (核心契约) + Layer 2 (实施指令) + Layer 3 (详细计划)
+
+Layer 1:  元数据、状态、意图、参考文献、工件清单、交接契约...
+Layer 2:  实施步骤、里程碑检查、文档更新规则...
+Layer 3:  问题跟踪、每周计划、实施报告...
+```
+
+---
+
+## 核心文件
+
+| 文件 | 说明 |
+|------|------|
+| [AES_Task_Specification_Writing_Guide.aes.yaml](https://github.com/tetracoralla/agent-system-theory/blob/main/specs/AES_Task_Specification_Writing_Guide.aes.yaml) | Agent 编写 AES 的完整规范 |
+
+---
+
+## 了解更多
+
+- [GitHub 仓库](https://github.com/tetracoralla/agent-system-theory)
+
+---
+
+## 许可证
+
+MIT License
