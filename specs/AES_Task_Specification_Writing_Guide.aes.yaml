@@ -1,2000 +1,1195 @@
-# AES (Agent-Executable Specification) v2.0
+# AES (Agent-Executable Specification) v3.0
 # File: AES_Task_Specification_Writing_Guide.aes.yaml
-# Purpose: 定义 AES (Agent-Executable Specification) 作为任务连续性规范，
-#          支持 Planning/Handoff/Execution Report 三种 profile，实现多 Agent 协作、
-#          任务连续性、断点恢复和企业工作流节点化编排
+# Purpose: 定义 AES 作为工作流节点执行包规范，支持 Agent 高效执行、防止偏离、
+#          多 Agent 协作、任务连续性和企业工作流编排
 
 # ========== 1. Metadata (REQUIRED) ==========
 meta:
-  task_id: "task_20260327_aes_guide_v2"
-  task_name: "AES 任务规范写作指南 — 支持任务连续性与多 Agent 协作"
-  version: "2.0.0"
-  created_at: "2026-03-27T20:00:00Z"
-  updated_at: "2026-03-27T21:00:00Z"
-  from_agent: "system_architect"
-  to_agent: "spec_implementer_agent"
-  session_id: "aes_guide_session_20260327_v2"
+  task_id: "task_20260328_aes_guide_v3"
+  task_name: "AES 工作流节点执行包写作指南 v3.0"
+  version: "3.0.0"
+  created_at: "2026-03-28T00:00:00Z"
+  updated_at: "2026-03-28T12:00:00Z"
+  from_agent: "chief_architect"
+  to_agent: "management_layer_agents"
+  session_id: "aes_guide_v3_session"
   parent_task_id: null
   document_type: "reference_guide"
-  target_agents: ["planner", "architect", "implementation_agent", "handoff_agent", "workflow_orchestrator"]
-  aes_profile: "planning"  # planning|handoff|execution_report
-  schema_version: "2.0.0"
+  target_agents: ["product_manager_agent", "project_manager_agent", "technical_lead_agent", "workflow_orchestrator"]
+  aes_profile: "planning"
+  schema_version: "3.0.0"
 
 # ========== 2. Status (REQUIRED) ==========
 status:
   current_phase: "planning"
   completion_percentage: 0
-  last_activity: "2026-03-27T20:00:00Z"
+  last_activity: "2026-03-28T12:00:00Z"
   completed_items: []
-  pending_items: []
+  pending_items:
+    - "修订 phase15-x 实施文档"
+    - "修订 runtime/task_subagent/task_manager.py 支持 AES 分发"
 
 # ========== 3. Intent (REQUIRED) ==========
 intent:
-  original_intent: "将 AES 指南从规划文档写作指南升级为生命周期任务规范，支持 Planning/Handoff/Execution Report 三种 profile，实现多 Agent 协作、任务连续性、断点恢复和企业工作流节点化编排"
+  original_intent: |
+    将 AES 从"任务规划文档"升级为"工作流节点执行包"，实现：
+    1. Agent 高效执行（最少提示词、最少偏离）
+    2. 自包含约束（所有信息在一个文件内）
+    3. 防止 Agent "聪明反被聪明"（运行时拦截）
+    4. 支持管理层 Agent 生成、执行层 Agent 执行的协作模式
   constraints:
-    - "指南必须保留 Layer 1/2/3 三层结构，但扩展为支持 profile 机制"
-    - "必须定义 Planning/Handoff/Execution Report 三种 profile 的字段与使用场景"
-    - "必须提供恢复契约、状态快照、工作流节点接口、多 Agent 共建治理等新字段"
-    - "必须包含机器校验规则（schema_version, validation_rules）"
-    - "指南本身不执行，只作为参考文档"
+    - "AES 必须自包含：所有约束、输入输出、禁止行为都在单文件内"
+    - "AES 必须可执行：Agent 读取后可直接开始工作，不需要找其他文件"
+    - "AES 必须防偏离：明确定义 must_follow 和 must_not"
+    - "AES 必须可拦截：定义 safeguards 供运行时监控"
   success_criteria:
-    - "AES 定义覆盖 planning、handoff、execution-report 三类用途"
-    - "新 Agent 可依据文档从 0 开始接手（存在完整恢复契约与状态快照）"
-    - "AES 可直接作为企业工作流节点工件（存在输入输出接口和上下游关系字段）"
-    - "规范可被自动校验（存在 schema_version 和 validation_rules）"
-    - "多 Agent 共建规则清晰（存在 collaboration_policy 等字段）"
-  assumptions:
-    - "Agent 理解 AES v2.0 基础结构"
-    - "未来 AES 需要同时服务规划 Agent、执行 Agent、审查 Agent 和接手 Agent"
-    - "企业复杂工作流会把 AES 当成节点工件，而不是仅在项目前期使用一次"
-    - "规范升级采用 profile 和 optional 字段，保持向后兼容"
+    - "管理层 Agent 可依据本指南撰写高质量 AES 节点包"
+    - "执行层 Agent 只需读取 AES 即可高效执行，偏离率 < 5%"
+    - "运行时系统可依据 AES 定义拦截 Agent 的偏离行为"
+    - "支持企业级复杂工作流的节点化编排"
 
-# ========== 4. Artifacts (REQUIRED) ==========
+# ========== 4. Background (REQUIRED) ==========
+background:
+  based_on_review: true
+  review_report_id: "3.9.2_AES_Workflow_Node_Packaging_Design_Philosophy.md"
+  problem_summary: |
+    原 AES v2.0 是"任务规划文档"，缺少：
+    1. 输入/输出契约（input_contract, output_contract）
+    2. 执行约束和禁止行为（execution_constraints）
+    3. 最小执行提示词（execution_prompt）
+    4. 防偏离机制（safeguards）
+    导致 Agent 执行时需要额外找文档、容易偏离、难以拦截。
+  context_summary: |
+    AES v3.0 定位为"工作流节点执行包"，每个 AES 是一个完整的工作流节点，
+    由管理层 Agent（产品经理、项目经理等）撰写，分发给执行层 Agent 执行。
+    核心原则：自包含、最小提示词、防止偏离。
+
+# ========== 5. References (REQUIRED) ==========
+references:
+  critical:
+    - id: "ref-design-philosophy"
+      name: "AES 工作流节点打包设计哲学"
+      path: "3.9.2_AES_Workflow_Node_Packaging_Design_Philosophy.md"
+      purpose: "理解 AES 作为工作流节点包的核心设计原则"
+      required_reading_time: "30分钟"
+  high:
+    - id: "ref-theory-framework"
+      name: "3.9.1-v4 多Agent系统工程应用框架"
+      path: "/Users/openadam/Documents/agent_system/literature_library/3_Theory_Implementation/3.9_Applied Theoretical Research/3.9.1-v4_Multi-Agent-System-Engineering-Application-Framework-Refined.md"
+      purpose: "理解五元结构理论基础"
+    - id: "ref-phase15-3"
+      name: "Phase 15-3 实施计划"
+      path: "architecture_design/phase15-3_implementation.aes.yaml"
+      purpose: "理解 Task/Subagent 与 AES 的关系"
+
+# ========== 6. Artifacts (REQUIRED) ==========
 artifacts:
   files_created:
     - path: "AES_Task_Specification_Writing_Guide.aes.yaml"
-      description: "本文档本身，AES 任务连续性规范写作指南"
+      description: "本文档，AES v3.0 写作指南"
       status: "completed"
-  guide_content: |
-    ========== GUIDE CONTENT ==========
-    
-    ## 1. Core Concept: What is an AES (Agent-Executable Specification)
-    
-    An AES is a YAML file that serves as a **lifecycle-wide task specification**, supporting three primary profiles:
-    
-    1. **Planning Profile**: Defines what to do (tasks, priorities, dependencies, acceptance criteria) with execution instructions
-    2. **Handoff/Resume Profile**: Enables task continuity across Agent switches, model failures, or interruptions
-    3. **Execution Report Profile**: Captures implementation results, progress轨迹, and audit trails
-    
-    Without the handoff and recovery capabilities, an AES document is just a static plan that loses context when Agents change. With full lifecycle support, it becomes a **recoverable task state package** that survives model swaps, handoffs, and enterprise workflow orchestration.
-    
-    ### The Three Profiles
-    
-    ```
-    # Planning Profile (Traditional planning document)
-    aes_profile: "planning"
-    # Contains: meta, status, intent, background, references, artifacts, next_agent_context,
-    #           implementation instructions, detailed plan
-    
-    # Handoff/Resume Profile (Task continuity)
-    aes_profile: "handoff"
-    # Adds: state_snapshot, handoff_contract, recovery_policy, last_known_good_state,
-    #        resume_from, model_swap_fallback, boot_order
-    
-    # Execution Report Profile (Implementation results)
-    aes_profile: "execution_report"
-    # Adds: checkpoint_receipts, artifact_registry, integrity_hashes, 
-    #        implementation_summary, quality_metrics, acceptance_evidence
-    ```
-    
-    ### The Critical Evolution: From Planning Document to Task Continuity Spec
-    
-    ```
-    # v1.0: Planning-only document (agent reads, implements, updates)
-    meta:
-      task_name: "Phase N: Planning"
-    
-    # v2.0: Lifecycle task specification (survives handoffs, model swaps, workflow nodes)
-    meta:
-      task_name: "Task Specification: Phase N"
-      aes_profile: "planning"  # planning|handoff|execution_report
-      schema_version: "2.0.0"
-    
-    # New sections for continuity
-    state_snapshot:
-      last_known_good_state: "Week 2 completed, 3/5 tasks done"
-      resume_from: "task_2_4"
-      remaining_work: ["task_2_5", "task_3_1", "task_3_2"]
-    
-    handoff_contract:
-      boot_order: ["read state_snapshot", "verify artifact_registry", "execute resume_from"]
-      forbidden_assumptions: ["Assume model capabilities", "Assume previous Agent's mental state"]
-      must_verify_before_execute: ["baseline_test_count", "artifact_integrity"]
-    ```
-    
-    ---
-    
-    ## 2. When to Create Which AES Profile
-    
-    ### Planning Profile (aes_profile: "planning")
-    Create a Planning Profile AES when ANY of the following apply:
-    
-    - Starting a new project phase (Phase N planning)
-    - Implementing a major feature or architectural change
-    - Responding to a review/audit report with multiple issues to fix
-    - Any work that spans multiple days and requires traceability
-    - Any work that may be handed off to another agent (start with Planning, then evolve to Handoff)
-    
-    ### Handoff/Resume Profile (aes_profile: "handoff")
-    Create or transition to a Handoff Profile when:
-    
-    - Task execution is interrupted (model failure, context loss, Agent unavailability)
-    - Switching to a different Agent or model for continued execution
-    - Enterprise workflow requires a checkpoint for orchestration
-    - Task needs to survive across multiple sessions or days
-    - You need to preserve state for future resumption
-    
-    ### Execution Report Profile (aes_profile: "execution_report")
-    Create an Execution Report Profile when:
-    
-    - Milestone or phase completion needs formal documentation
-    - Audit trail required for compliance or governance
-    - Implementation results need to be shared with stakeholders
-    - Workflow node outputs need to be certified for downstream consumption
-    
-    ### Profile Evolution
-    A single task may evolve through multiple profiles during its lifecycle. Understanding when and why to transition between profiles is key to maintaining task continuity.
-    
-    #### Trigger Conditions for Profile Transitions
-    
-    **Planning → Handoff/Resume (When task execution is interrupted):**
-    - Model failure or context loss
-    - Agent unavailability (scheduled or unexpected)
-    - Task needs to survive across multiple sessions/days
-    - Enterprise workflow orchestration requires checkpoint
-    - Intentional handoff to specialized Agent
-    
-    **Planning/Handoff → Execution Report (When milestone is completed):**
-    - Phase or milestone completion
-    - Audit trail required for compliance
-    - Results need to be certified for downstream workflow nodes
-    - Formal documentation needed for stakeholders
-    - Implementation results ready for review
-    
-    **Execution Report → Planning (When starting next phase):**
-    - New phase begins (linked via parent_task_id)
-    - Follow-up work identified in acceptance report
-    - Continuous improvement cycle
-    
-    #### Profile Transition Matrix
-    
-    ```
-    ┌──────────────┬─────────────────────┬─────────────────────────┬──────────────────────┐
-    │ From/To      │ Planning            │ Handoff/Resume          │ Execution Report     │
-    ├──────────────┼─────────────────────┼─────────────────────────┼──────────────────────┤
-    │ Planning     │ -                   │ • Interruption          │ • Milestone complete │
-    │              │                     │ • Scheduled handoff     │ • Audit required     │
-    │              │                     │ • Multi-session work    │                      │
-    ├──────────────┼─────────────────────┼─────────────────────────┼──────────────────────┤
-    │ Handoff/     │ • Resume completed  │ -                       │ • Milestone complete │
-    │ Resume       │ • New phase starts  │                         │ • Audit required     │
-    ├──────────────┼─────────────────────┼─────────────────────────┼──────────────────────┤
-    │ Execution    │ • Next phase        │ Not applicable          │ -                    │
-    │ Report       │ • Follow-up work    │                         │                      │
-    └──────────────┴─────────────────────┴─────────────────────────┴──────────────────────┘
-    ```
-    
-    #### Week/Milestone to Profile Mapping
-    
-    Typical progression in a multi-week project:
-    
-    ```
-    Week 1-2 (Planning Profile)    → Task definition, execution plan
-    Week 3 (Handoff Profile)       → Mid-execution checkpoint, state snapshot
-    Week 4-5 (Planning Profile)    → Resume execution (if handed off)
-    Week 6 (Execution Report)      → Milestone completion, audit trail
-    Week 7+ (New Planning Profile) → Next phase planning
-    ```
-    
-    **Key Principle:** A single AES document can evolve through profiles by updating the `aes_profile` field and adding/removing profile-specific sections. The core Layer 1-3 structure remains consistent.
-    
-    ### When NOT to Create an AES
-    
-    - Single bug fix (< 30 minutes)
-    - Trivial refactoring with no risk
-    - Work that can be completed in a single conversation turn
-    - Tasks that don't require traceability, handoff, or audit trails
-    
-    ---
-    
-    ## 3. Complete Document Structure
-    
-    An AES v2.0 specification supports **three profiles** (planning, handoff, execution_report) while retaining the three-layer structure:
+  files_modified: []
+  decisions_made: []
 
-    ```
-    Layer 1: AES Core Sections (1-16)    ← Enhanced with profile-specific sections
-    Layer 2: Implementation Instructions  ← THIS GUIDE'S PRIMARY CONTRIBUTION
-    Layer 3: Detailed Plan (Tasks/Weeks) ← Phase-specific planning content
-    ```
-
-    **Profile-aware structure**:
-    - Planning Profile: Uses Layer 1 core sections + Layer 2 + Layer 3
-    - Handoff/Resume Profile: Adds state_snapshot, handoff_contract, recovery_policy
-    - Execution Report Profile: Adds checkpoint_receipts, artifact_registry, validation_rules
-    
-    ### File Structure Template
-    
-    ```yaml
-    # AES (Agent-Executable Specification) v2.0
-    # File naming: {phase_id}_{descriptive_name}.aes.yaml
-    # aes_profile: planning|handoff|execution_report (REQUIRED in meta)
-    
-    # ==================== Layer 1: AES Core (REQUIRED) ====================
-    
-    # 1. Metadata
-    meta:
-      task_id: "task_{YYYYMMDD}_{phase_id}"
-      task_name: "Phase N: {Title}"
-      version: "2.0.0"
-      schema_version: "2.0.0"                 # AES schema version (must match validation_rules)
-      created_at: "{ISO8601}"
-      updated_at: "{ISO8601}"
-      from_agent: "{planner_id}"
-      to_agent: "{implementer_id}"
-      session_id: "{session_id}"
-      parent_task_id: "{parent_id}"           # Link to review report or previous phase
-      aes_profile: "planning"                 # planning|handoff|execution_report (REQUIRED)
-      target_agents: ["planner", "implementer", "reviewer"]  # Agents who will interact with this spec
-    
-    # 2. Status
-    status:
-      current_phase: "planning"               # planning|implementation|review|completed
-      completion_percentage: 0                # 0-100
-      last_activity: "{ISO8601}"
-      completed_items: []
-      pending_items:
-        - "Week 1: {summary}"
-        - "Week 2: {summary}"
-        # ...
-    
-    # 3. Intent
-    intent:
-      original_intent: "{Exact user request or objective}"
-      constraints:
-        - "Hard constraint 1"
-        - "Test baseline: {N} tests must pass"
-      success_criteria:
-        - "Measurable success condition 1"
-        - "Score improvement from X to Y"
-      assumptions:
-        - "Assumption 1"
-        - "Previous phase N-1 is complete"
-    
-    # 4. Background (REQUIRED when based_on_review = true)
-    background:
-      based_on_review: true/false           # true if plan responds to a review/audit report
-      review_report_id: "{report_id}"       # Required when based_on_review = true
-      problem_summary: "Summary of key issues from the review report"
-      context_summary: "Why this plan exists and what it aims to solve"
-      stakeholders: ["{stakeholder1}", "{stakeholder2}"]  # Who cares about this plan
-    
-    # 5. References (REQUIRED)
-    references:
-      critical:                             # MUST be read before implementation starts
-        - id: "ref-{shortname}"
-          name: "{Document Name}"
-          path: "{file_path}"
-          purpose: "{Why this document is critical}"
-          required_reading_time: "{duration}"
-          key_sections: "{sections to focus on}"
-      high:                                 # Should be read during implementation
-        - id: "ref-{shortname}"
-          name: "{Document Name}"
-          path: "{file_path}"
-          purpose: "{Purpose}"
-      medium:                               # Optional reading for context
-        - id: "ref-{shortname}"
-          name: "{Document Name}"
-          path: "{file_path}"
-      low:                                  # Background only, not required
-        - id: "ref-{shortname}"
-          name: "{Document Name}"
-          path: "{file_path}"
-    
-    # 6. Artifacts
-    artifacts:
-      files_created: []
-      files_modified: []
-      decisions_made:
-        - decision: "{Decision text}"
-          rationale: "{Why}"
-          alternatives: ["Alternative 1"]
-    
-    # 7. Next Agent Context
-    next_agent_context:
-      relevant_specs:
-        - "{spec_file_path} §{section}"
-      critical_assumptions:
-        - "Assumption that next agent MUST know"
-      hard_constraints:
-        - "Constraint that CANNOT be violated"
-      recommendations:
-        - "Suggested approach"
-      known_pitfalls:
-        - "Trap to avoid"
-      file_context:
-        important_files:
-          - "{file_path}: {what it does}"
-        deprecated_code:
-          - "{file_path}: DO NOT USE or DELETE with reason"
-        configuration:
-          - "{config_location}: {relevant config}"
-     
-    # --- Recovery & Handoff Sections (for Handoff/Resume Profile) ---
-
-    # State Snapshot
-    state_snapshot:
-      last_known_good_state: "{Description of last verified state}"
-      resume_from: "{task_id or milestone}"
-      remaining_work: ["{task_id}", "{task_id}"]
-      model_swap_fallback: "{fallback_model_if_primary_fails}"
-
-    # Handoff Contract
-    handoff_contract:
-      boot_order: ["{step1}", "{step2}"]
-      forbidden_assumptions: ["{assumption1}", "{assumption2}"]
-      must_verify_before_execute: ["{verification1}", "{verification2}"]
-      handoff_instructions: "{Special instructions for receiving agent}"
-
-    # Recovery Policy
-    recovery_policy:
-      recovery_scenarios:
-        - scenario: "model_failure"
-          steps: ["{step1}", "{step2}"]
-        - scenario: "context_loss"
-          steps: ["{step1}", "{step2}"]
-      fallback_plan: "{Alternative plan if recovery fails}"
-
-    # --- Workflow Node Sections (for Workflow Node Profile) ---
-
-    # Workflow Interface
-    workflow_interface:
-      input_contract:
-        required_artifacts: ["{artifact1}", "{artifact2}"]
-        required_data: ["{data1}", "{data2}"]
-        quality_gates: ["{gate1}", "{gate2}"]
-      output_contract:
-        produced_artifacts: ["{artifact1}", "{artifact2}"]
-        produced_data: ["{data1}", "{data2}"]
-        quality_metrics: ["{metric1}", "{metric2}"]
-      entry_conditions: ["{condition1}", "{condition2}"]
-      exit_conditions: ["{condition1}", "{condition2}"]
-      downstream_consumers: ["{consumer1}", "{consumer2}"]
-
-    # --- Collaboration & Governance Sections ---
-
-    # Collaboration Policy
-    collaboration_policy:
-      ownership_policy: "{single_owner|shared_ownership|rotating_ownership}"
-      write_ownership: ["{agent_id}", "{agent_id}"]
-      append_only_sections: ["{section1}", "{section2}"]
-      merge_policy: "{last_write_wins|consensus_required|manual_merge}"
-      write_scope: "{global|section_specific|task_specific}"
-
-    # Validation Rules
-    validation_rules:
-      schema_version: "2.0.0"
-      required_fields_by_profile:
-        planning: ["meta", "status", "intent", "artifacts", "next_agent_context"]
-        handoff: ["state_snapshot", "handoff_contract"]
-        execution_report: ["checkpoint_receipts", "artifact_registry"]
-      lint_rules: ["{rule1}", "{rule2}"]
-      allowed_profiles: ["planning", "handoff", "execution_report"]
-
-    # Checkpoint Receipts
-    checkpoint_receipts:
-      - checkpoint_id: "{checkpoint_id}"
-        timestamp: "{ISO8601}"
-        agent_id: "{agent_id}"
-        approval_status: "approved|rejected|pending"
-        artifact_hashes: ["{hash1}", "{hash2}"]
-
-    # Artifact Registry
-    artifact_registry:
-      - artifact_id: "{artifact_id}"
-        path: "{file_path}"
-        hash: "{integrity_hash}"
-        created_at: "{ISO8601}"
-        modified_at: "{ISO8601}"
-        ownership: "{agent_id}"
-
-    # 8. Governance (RECOMMENDED)
-    governance:
-      audit_trail_id: "{audit_id}"
-      risk_level: "L1-L5"
-      approval_required: []
-    
-    # 9. Risks (RECOMMENDED)
-    risks:
-      - issue: "{Risk description}"
-        severity: "high|medium|low"
-        mitigation: "{Mitigation strategy}"
-        status: "pending|mitigated|accepted"
-    
-    # 10. Evolution (OPTIONAL)
-    evolution:
-      hil_level: "L1-L5"
-      architecture_mode: "Script|Skill|Agent|Multi-Agent"
-      complexity_score: 1-10
-    
-    # 11. Execution Policy (OPTIONAL)
-    execution_policy:
-      model: "default"
-      max_steps: 50
-      tools_allowed: []
-      tools_forbidden: []
-    
-    # ==================== Layer 2: Implementation Instructions (REQUIRED FOR PLANNING) ====================
-    # THIS IS THE MOST IMPORTANT PART — without it, the plan is just a static document.
-    
-    # 2A. Implementation Overview
-    implementation_overview:
-      steps:
-        - step: "0"
-          content: "Prerequisite check"
-          duration: "{time}"
-          priority: "P0"
-          mandatory: true
-        - step: "1"
-          content: "Read core references"
-          duration: "{time}"
-          priority: "P0"
-          mandatory: true
-        - step: "2"
-          content: "Create working branch"
-          duration: "{time}"
-          priority: "P0"
-          mandatory: true
-        # ... step 3+ for each Week/sprint
-    
-    # 2B. Step 0: Prerequisite Check
-    step0_prerequisite_check:
-      environment_check:
-        commands: |
-          # Commands to verify environment
-        expected_results:
-          - "Expected result 1"
-      key_files_check:
-        commands: |
-          # Commands to verify key files exist
-        expected_results:
-          - "Expected result 1"
-      baseline_test_run:
-        commands: |
-          # Commands to run baseline tests
-        expected_results:
-          - "Expected result 1"
-    
-    # 2C. Step 1: Required Reading
-    step1_required_reading:
-      reading_list:
-        - id: "R1"
-          name: "{Document name}"
-          path: "{file path}"
-          key_sections: "{sections to focus on}"
-          duration: "{time}"
-          purpose: "{why read this}"
-    
-    # 2D. Step 2: Create Working Branch
-    step2_create_branch:
-      commands: |
-        git checkout -b {branch_name}
-        git tag {phase}-start-point
-      expected_results:
-        - "Branch created"
-        - "Tag created"
-    
-    # 2E. Documentation Update Instructions (CRITICAL)
-    documentation_update_instructions:
-      purpose: |
-        **CRITICAL ENFORCEMENT**: This document is a living contract and MUST be updated
-        at each milestone. Failure to update status, artifacts, and append week reports
-        constitutes non‑compliance and blocks progression to the next milestone.
-        The agent MUST treat these updates as mandatory P0 tasks, equal in priority to code implementation.
+# ========== 7. Guide Content ==========
+guide_content: |
+  ========== AES v3.0 工作流节点执行包写作指南 ==========
+  
+  ## 第一章：核心概念
+  
+  ### 1.1 AES 是什么
+  
+  **AES (Agent-Executable Specification) 是工作流节点的完整执行包**。
+  
+  ```
+  错误理解：AES = 任务规划文档（给人看的）
+  正确理解：AES = 工作流节点执行包（给 Agent 执行的）
+  ```
+  
+  **核心特征**：
+  
+  | 特征 | 说明 |
+  |------|------|
+  | 自包含 | 所有约束、输入输出、禁止行为都在单文件内 |
+  | 可执行 | Agent 读取后可直接开始工作 |
+  | 防偏离 | 明确定义 must_follow 和 must_not |
+  | 可拦截 | 运行时可监控并拦截偏离行为 |
+  
+  ### 1.2 AES 服务对象
+  
+  **主要服务对象：Agent（执行者）**
+  
+  | 角色 | 职责 |
+  |------|------|
+  | 管理层 Agent | 撰写 AES、编排工作流、分配任务 |
+  | 执行层 Agent | 读取 AES、执行任务、产出 Artifact |
+  | 运行时系统 | 验证 AES、监控执行、拦截偏离 |
+  
+  **次要服务对象：人类（需求方）**
+  - 查看任务简报（由 AES 派生的 Markdown）
+  - 不直接阅读 AES 原文
+  
+  ### 1.3 工作流节点与 AES 的关系
+  
+  每个工作流节点 = 一个 AES 文件
+  
+  ```
+  用户需求："开发一个电商网站"
+  
+  工作流节点链：
+  ├── AES-1: 需求调研分析      → 产品经理 Agent 执行
+  ├── AES-2: 撰写 PRD          → 产品经理 Agent 执行
+  ├── AES-3: 项目规划          → 项目经理 Agent 执行（生成分发）
+  │   ├── AES-4: UI 设计       → 设计师 Agent 执行
+  │   ├── AES-5: 前端开发      → 前端 Agent 执行
+  │   └── AES-6: 后端开发      → 后端 Agent 执行
+  └── AES-7: 集成测试          → QA Agent 执行
+  ```
+  
+  ### 1.4 AES 与 Subagent 的关系
+  
+  ```
+  AES = 任务规范（做什么、怎么做、不能做什么）
+  Subagent = 执行机制（如何并行执行多个任务）
+  
+  关系：
+  项目经理 Agent 收到 AES-3
+      │
+      ├── 分析任务，决定并行执行
+      │
+      ├── 创建 Subagent-1 → 分配 AES-4（UI 设计）
+      ├── 创建 Subagent-2 → 分配 AES-5（前端开发）
+      └── 创建 Subagent-3 → 分配 AES-6（后端开发）
       
-      update_frequency: "At completion of each Week/sprint"
+  每个 Subagent 读取分配的 AES 文件并执行
+  ```
+  
+  ---
+  
+  ## 第二章：AES 节点包结构
+  
+  ### 2.1 完整结构概览
+  
+  ```yaml
+  # AES v3.0 工作流节点执行包结构
+  
+  # === 身份与边界 ===
+  identity:                    # 节点身份定义
+    node_id: "..."
+    node_name: "..."
+    executor: "..."            # 执行者 Agent
+    parent_node: "..."         # 父节点
+    expected_duration: "..."   # 预计时长
+  
+  # === 输入契约（必须满足才能启动）===
+  input_contract:
+    required_artifacts: [...]  # 必需的输入工件
+    required_context: [...]    # 必需的上下文
+    forbidden_assumptions: [...] # 禁止的假设
+  
+  # === 输出契约（必须产出的内容）===
+  output_contract:
+    deliverables: [...]        # 交付物列表
+    acceptance_criteria: [...] # 验收标准
+  
+  # === 执行约束（防止 Agent 偏离）===
+  execution_constraints:
+    must_follow: [...]         # 必须遵守
+    must_not: [...]            # 禁止行为
+    max_tokens: ...            # 输出上限
+    timeout: "..."             # 超时限制
+  
+  # === 执行提示词（最小化但完整）===
+  execution_prompt:
+    template: "..."            # 提示词模板
+  
+  # === Checkpoint 配置 ===
+  checkpoint:
+    enabled: true/false
+    type: "..."
+    approvers: [...]
+    auto_approve_if: [...]
+  
+  # === 风险预防（运行时拦截）===
+  safeguards:
+    deviation_detection: [...] # 偏离检测规则
+    fallback: [...]            # 降级方案
+  ```
+  
+  ### 2.2 各字段详解
+  
+  #### 2.2.1 identity（身份与边界）
+  
+  ```yaml
+  identity:
+    node_id: "aes-004-ui-design"           # 节点唯一标识
+    node_name: "UI 设计"                    # 节点名称
+    executor: "designer_agent"              # 执行者 Agent ID
+    parent_node: "aes-003-project-planning" # 父节点（工作流上下游）
+    expected_duration: "2h"                 # 预计执行时长
+  ```
+  
+  **规则**：
+  - `node_id` 格式：`aes-{sequence}-{short-name}`
+  - `executor` 必须是系统中已注册的 Agent
+  - `parent_node` 用于追溯工作流来源
+  
+  #### 2.2.2 input_contract（输入契约）
+  
+  **定义任务启动前必须满足的条件**。
+  
+  ```yaml
+  input_contract:
+    required_artifacts:
+      - artifact_id: "prd-v1.0"
+        type: "document"                    # document|code|data|config
+        path: "artifacts/prd.md"
+        validation: "必须包含页面列表和交互说明"
+        required: true                      # 是否必需
+    
+    required_context:
+      - "产品类型：电商"
+      - "目标用户：C端消费者"
+      - "技术栈：React + Node.js"
+    
+    forbidden_assumptions:
+      - "不要假设设计风格已确定"
+      - "不要假设用户已明确所有需求"
+      - "不要跳过设计规范检查"
+  ```
+  
+  **关键作用**：
+  1. Agent 启动前验证所有输入是否就绪
+  2. 明确告诉 Agent "不要假设什么"，防止过度发挥
+  
+  #### 2.2.3 output_contract（输出契约）
+  
+  **定义任务完成后必须产出的内容**。
+  
+  ```yaml
+  output_contract:
+    deliverables:
+      - artifact_id: "ui-design-v1.0"
+        type: "code"
+        path: "artifacts/ui/"
+        validation: "必须符合设计系统规范"
+        required: true
       
-      enforcement: |
-        - These updates are NOT optional; they are part of the task completion criteria.
-        - The milestone_completion_checklist includes verification of this checklist.
-        - If any item is missed, the milestone is NOT complete and must be remedied before proceeding.
-      
-      update_checklist_per_milestone:
-        - "[ ] Update status.current_phase"
-        - "[ ] Update status.completion_percentage"
-        - "[ ] Update status.last_activity (ISO 8601)"
-        - "[ ] Move completed items from pending_items to completed_items"
-        - "[ ] Update artifacts.files_created"
-        - "[ ] Update artifacts.files_modified"
-        - "[ ] Update artifacts.decisions_made (if any)"
-        - "[ ] Update problem_tracking status for relevant GAPs"
-        - "[ ] Append week_X_implementation_report to this document"
-        - "[ ] Update meta.updated_at"
-        - "[ ] Update meta.version (if major change)"
+      - artifact_id: "design-report"
+        type: "document"
+        path: "artifacts/design-report.md"
+        validation: "必须说明设计决策"
+        required: true
     
-    # 2F. Milestone/Week Execution Instructions
-    milestone_execution_instructions:
-      milestone_start_checklist:
-        - "[ ] Previous milestone fully complete"
-        - "[ ] All tests passing"
-        - "[ ] Status and artifacts updated"
-        - "[ ] Git tag created"
-      
-      daily_workflow:
-        - "Start: Confirm today's tasks from plan"
-        - "Execute: Follow task steps, test incrementally"
-        - "Commit: Use standardized commit message format"
-        - "End: Run tests, update document status, record blockers"
-      
-      git_commit_format: "{phase}[wX][task-Y-Z]: {description}"
-      
-      milestone_completion_checklist:
-        - "[ ] All tasks in this milestone complete"
-        - "[ ] All unit tests pass"
-        - "[ ] All integration tests pass"
-        - "[ ] Security scan pass (if applicable)"
-        - "[ ] Full regression tests pass"
-        - "[ ] Status and artifacts updated in this document"
-        - "[ ] Git tag created ({phase}-weekX-complete)"
-        - "[ ] Implementation report appended to this document"
-        - "[ ] Verify documentation_update_instructions.update_checklist_per_milestone completed"
-    
-    # 2G. Completion/Final Instructions
-    phase_completion_instructions:
-      final_checklist:
-        - "[ ] All milestones complete"
-        - "[ ] All tracked issues resolved"
-        - "[ ] Full regression tests pass"
-        - "[ ] Performance baseline maintained or improved"
-        - "[ ] Status updated to 'completed'"
-        - "[ ] Completion percentage updated to 100"
-        - "[ ] Git tag {phase}-complete created"
-        - "[ ] Acceptance report generated"
-      
-      final_report_instructions:
-        report_file: "docs/{phase}_acceptance_report.md"
-        report_format: "AES v2.0 YAML"
-        report_sections:
-          - "Summary (score improvement, issue resolution status)"
-          - "Milestone implementation summaries"
-          - "Test results (unit/integration/regression/security)"
-          - "Performance baseline comparison"
-          - "Remaining issues (if any)"
-          - "Recommendations for next phase"
-    
-    # 2H. FAQ
-    faq: []
-    
-    # 2I. Key Decision Points
-    key_decision_points: []
-    
-    # ==================== Layer 3: Detailed Plan ====================
-    
-    # 3A. Problem/Issue Tracking (if from a review)
-    problem_tracking: {}
-    
-    # 3B. Score/Quality Targets (if measurable)
-    score_targets: {}
-    
-    # 3C. Week/Milestone Plans
-    week1:
-      name: "{Week name}"
-      duration: "{duration}"
-      priority: "P0"
-      task_1_1:
-        name: "{Task name}"
-        priority: "P1|P2|P3"
-        description: "{What to do and why}"
-        steps:
-          - "Step 1"
-          - "Step 2"
-        deliverables:
-          - "{file or component}"
-        acceptance_criteria:
-          - "Measurable condition 1"
-          - "Tests pass"
-      task_1_2:
-        # ... next task
-    
-    # 3D. New Directories/Dependencies
-    new_directories: []
-    new_dependencies: []
-    
-    # 3E. Implementation Reports (APPENDED DURING EXECUTION)
-    # week_1_implementation_report: {}
-    # week_2_implementation_report: {}
-    # ...
-    ```
-    
-    ---
-    
-    ## 4. The Implementation Instruction Sections — Deep Dive
-    
-    This section explains each Layer 2 block in detail. These are what make an AES planning document **executable by an agent**.
-    
-    ### 4.1 implementation_overview
-    
-    Purpose: Give implementing agent a quick overview of ALL steps before reading details.
-    
-    ```yaml
-    implementation_overview:
-      steps:
-        - step: "0"
-          content: "Prerequisite check"
-          duration: "1-2 hours"
-          priority: "P0"
-          mandatory: true
-        - step: "1"
-          content: "Read core references"
-          duration: "4 hours"
-          priority: "P0"
-          mandatory: true
-        # Step 2: Create branch
-        # Steps 3..N: One per Week/milestone
-        # Last step: Integration verification and acceptance
-    ```
-    
-    Rules:
-    - Step 0-2 are ALWAYS present (prerequisites, reading, branch)
-    - One step per Week/milestone in detailed plan
-    - Last step is always integration verification
-    - Every step after Step 2 has `mandatory: true` by default
-    - Use `mandatory: false` for optional preparation steps
-    
-    ### 4.2 step0_prerequisite_check
-    
-    Purpose: Verify environment is ready BEFORE any code changes.
-    
-    Three sub-sections, ALL required:
-    
-    ```yaml
-    step0_prerequisite_check:
-      environment_check:
-        commands: |
-          # Environment verification commands
-        expected_results:
-          - "Result 1"
-          - "Result 2"
-      
-      key_files_check:
-        commands: |
-          # File existence checks
-        expected_results:
-          - "File exists"
-      
-      baseline_test_run:
-        commands: |
-          # Baseline test commands
-        expected_results:
-          - "N tests pass, 0 fail"
-    ```
-    
-    Rules:
-    - `commands` must be copy-pasteable bash commands
-    - `expected_results` must be concrete and verifiable (not vague like "works")
-    - Include test exclusion list from AGENTS.md if running pytest
-    - Record baseline test count (this is the regression guard)
-    
-    ### 4.3 step1_required_reading
-    
-    Purpose: Ensure implementing agent understands context before writing code.
-    
-    ```yaml
-    step1_required_reading:
-      reading_list:
-        - id: "R1"
-          name: "{Descriptive name}"
-          path: "{Absolute or relative file path}"
-          key_sections: "{Specific sections to focus on}"
-          duration: "{Estimated time}"
-          purpose: "{Why this is relevant to the plan}"
-    ```
-    
-    Rules:
-    - Maximum 5 items in reading_list (more causes context overflow)
-    - **CRITICAL**: All documents in `references.critical` MUST appear in reading_list
-    - **HIGH**: Documents in `references.high` should appear if space permits
-    - Prioritize: review/audit report first, then theory/design docs
-    - Each item must have a concrete `purpose` linking it to specific tasks
-    - Include AES writing guide itself if agent needs to update this document
-    
-    ### 4.4 documentation_update_instructions
-    
-    Purpose: **THIS IS THE MOST CRITICAL SECTION**. Without it, the agent will not know how to maintain the document as a living artifact.
-    
-    ```yaml
-    documentation_update_instructions:
-      purpose: |
-        **CRITICAL ENFORCEMENT**: This document is a living contract and MUST be updated
-        at each milestone. Failure to update status, artifacts, and append week reports
-        constitutes non‑compliance and blocks progression to the next milestone.
-        The agent MUST treat these updates as mandatory P0 tasks, equal in priority to code implementation.
-      
-      update_frequency: "At completion of each Week/milestone"
-      
-      enforcement: |
-        - These updates are NOT optional; they are part of the task completion criteria.
-        - The milestone_completion_checklist includes verification of this checklist.
-        - If any item is missed, the milestone is NOT complete and must be remedied before proceeding.
-      
-      update_checklist_per_milestone:
-        - "[ ] Update status.current_phase"
-        - "[ ] Update status.completion_percentage"
-        - "[ ] Update status.last_activity (ISO 8601)"
-        - "[ ] Move completed items from pending_items to completed_items"
-        - "[ ] Update artifacts.files_created"
-        - "[ ] Update artifacts.files_modified"
-        - "[ ] Update artifacts.decisions_made (if any)"
-        - "[ ] Update meta.updated_at"
-        - "[ ] Update meta.version (if major change)"
-    ```
-    
-    Rules:
-    - `update_checklist_per_milestone` must have at least 6 items
-    - `completion_percentage` calculation: `(completed_milestones / total_milestones) * 100`
-    - `last_activity` must use ISO 8601 format: `YYYY-MM-DDTHH:MM:SSZ`
-    - If a milestone is partially complete, use fraction: e.g., 3/5 tasks done in Week 2 of 5 weeks = 60%
-    - Status phase progression: `planning` → `implementation` → `review` → `completed`
-    
-    ### 4.5 milestone_execution_instructions
-    
-    Purpose: Standardize how each milestone (Week/sprint) is executed.
-    
-    ```yaml
-    milestone_execution_instructions:
-      milestone_start_checklist:
-        - "[ ] Previous milestone fully complete"
-        - "[ ] All tests passing"
-        - "[ ] Status and artifacts updated in this document"
-        - "[ ] Git tag for previous milestone created"
-      
-      daily_workflow:
-        - "Morning: Confirm today's tasks from plan"
-        - "Execute: Follow task steps, test incrementally"
-        - "Commit: Use standardized commit message format"
-        - "End: Run tests, update document status, record blockers"
-      
-      git_commit_format: "{phase}[wX][task-Y-Z]: {description}"
-      # Example: phase14[w1][task-1-1]: Complete enum unification
-      
-      milestone_completion_checklist:
-        - "[ ] All tasks in this milestone complete"
-        - "[ ] All unit tests pass"
-        - "[ ] All integration tests pass"
-        - "[ ] Security scan pass (if applicable)"
-        - "[ ] Full regression tests pass"
-        - "[ ] Status and artifacts updated in this document"
-        - "[ ] Git tag created ({phase}-weekX-complete)"
-        - "[ ] Implementation report appended to this document"
-        - "[ ] Verify documentation_update_instructions.update_checklist_per_milestone completed"
-    ```
-    
-    Rules:
-    - `git_commit_format` must follow the pattern: `{phase}[wX][task-Y-Z]: {description}`
-    - The milestone completion checklist is a GATE: do not proceed to next milestone without passing all items
-    - The last item ("Implementation report appended") ensures traceability
-    
-    ### 4.6 Implementation Report Template
-    
-    Purpose: Standardize the format of reports appended during execution.
-    
-    The implementing agent must append a report at the end of each milestone. Place the report section BEFORE any static reference sections (like `new_directories` or `new_dependencies`).
-    
-    ```yaml
-    # Appended to this document after Week X completion
-    week_x_implementation_report:
-      start_date: "{YYYY-MM-DD}"
-      end_date: "{YYYY-MM-DD}"
-      completion_percentage: "{N}%"
-      tasks_completed:
-        - task_id: "task_X_Y"
-          name: "{Task name}"
-          status: "completed"
-          actual_duration: "{Actual time spent}"
-          challenges: "{What went wrong}"
-          solutions: "{How it was resolved}"
-      test_results:
-        unit_tests:
-          total: "{N}"
-          passed: "{N}"
-          failed: 0
-        integration_tests:
-          total: "{N}"
-          passed: "{N}"
-          failed: 0
-        regression_tests:
-          baseline: "{N}"
-          passed: "{N}"
-          failed: 0
-      security_scan:
-        tool: "bandit"
-        findings: 0
-        files_scanned: "{N}"
-      git_tags:
-        - "{phase}-weekX-complete"
-      next_milestone_preparation:
-        ready: true
-        blockers: []
-    ```
-    
-    Rules:
-    - Report keys use snake_case
-    - `test_results` must have all three sub-sections (unit/integration/regression)
-    - `challenges` and `solutions` must not be empty (even if "none")
-    - `failed` must be 0 in `regression_tests` (if not 0, milestone is not complete)
-    
-    ### 4.7 phase_completion_instructions
-    
-    Purpose: Define what "done" looks like for the entire phase.
-    
-    ```yaml
-    phase_completion_instructions:
-      final_checklist:
-        - "[ ] All milestones complete"
-        - "[ ] All tracked issues resolved"
-        - "[ ] Full regression tests pass"
-        - "[ ] Performance baseline maintained or improved"
-        - "[ ] Status updated to 'completed'"
-        - "[ ] Completion percentage updated to 100"
-        - "[ ] Git tag {phase}-complete created"
-        - "[ ] Acceptance report generated at docs/{phase}_acceptance_report.md"
-      
-      final_report_instructions:
-        report_file: "docs/{phase}_acceptance_report.md"
-        report_format: "AES v2.0 YAML"
-        report_sections:
-          - "Summary (score improvement, issue resolution status)"
-          - "Milestone implementation summaries"
-          - "Test results (unit/integration/regression/security)"
-          - "Performance baseline comparison"
-          - "Remaining issues (if any)"
-          - "Recommendations for next phase"
-    ```
-    
-    Rules:
-    - `final_checklist` must cover ALL quality gates
-    - The acceptance report is a SEPARATE file in `docs/`, not appended to the planning document
-    - Add a reference to the acceptance report in `meta.acceptance_report` upon completion
-    
-    ### 4.8 faq and key_decision_points
-    
-    Purpose: Pre-answer questions that the implementing agent will inevitably ask.
-    
-    ```yaml
-    faq:
-      - question: "I'm not familiar with this project, where do I start?"
-        answer: |
-          1. Read the review/input report first
-          2. Read theory/design docs
-          3. Run prerequisite checks
-          4. Start with Week 1 Task 1.1
-      
-      - question: "Can I skip or reorder weeks?"
-        answer: "No. Weeks have strict dependency chains."
-      
-      - question: "How do I verify my work?"
-        answer: "Each task has acceptance_criteria. Run them."
-    
-    key_decision_points:
-      - question: "Can I skip {critical task}?"
-        answer: "No."
-        reason: "{Why}"
-        minimum_requirement: "{What must be done at minimum}"
-    ```
-    
-    Rules:
-    - FAQ should cover at least 5 common questions
-    - Decision points should cover irreversible or high-risk choices
-    - Answers must be definitive (not "it depends" without qualification)
-    
-    ---
-    
-    ## 5. Layer 3: Detailed Plan — Best Practices
-    
-    ### 5.1 Problem/Issue Tracking
-    
-    When the plan is based on a review or audit report, include a tracking matrix:
-    
-    ```yaml
-    problem_tracking:
-      p1_issues:
-        - id: "P1-T1"
-          name: "{Issue name}"
-          assigned_milestone: "Week 2"
-          task_ref: "task_2_1"
-          status: "pending"
-      p2_issues:
-        - id: "P2-T1"
-          name: "{Issue name}"
-          assigned_milestone: "Week 1"
-          task_ref: "task_1_3"
-          status: "pending"
-    ```
-    
-    Rules:
-    - Every issue from the source report MUST appear in the tracking matrix
-    - `assigned_milestone` and `task_ref` create bidirectional traceability
-    - `status` is updated to "completed" when the corresponding task passes acceptance criteria
-    
-    ### 5.2 Task Definition
-    
-    Each task must have ALL of the following fields:
-    
-    ```yaml
-    task_1_1:
-      name: "{Concise task title}"           # Required
-      priority: "P1|P2|P3"                   # Required
-      review_item: "P1-T1"                   # Required if from review
-      description: |
-        {What to do, why, and how. 2-5 sentences.}
-      steps:                                  # Required
-        - "Concrete step 1"
-        - "Concrete step 2"
-      deliverables:                           # Required
-        - "{file or component produced}"
-      acceptance_criteria:                    # Required, must be testable
-        - "Specific condition 1"
-        - "Tests pass"
-    ```
-    
-    Rules:
-    - `steps` must be ordered and concrete (not "implement X" but "create file Y with class Z")
-    - `acceptance_criteria` must be binary (pass/fail), not subjective ("looks good")
-    - If a task has sub-tasks that could take > 1 day, split it into separate tasks
-    - Task IDs follow the pattern: `task_{week}_{sequence}` (e.g., task_1_1, task_2_3)
-    
-    ### 5.3 Week/Milestone Structure
-    
-    ```yaml
-    week1:
-      name: "{Descriptive name}"
-      duration: "{5 days}"
-      priority: "P0"
-      review_source: "{Input document reference}"  # If applicable
-      
-      task_1_1: { ... }
-      task_1_2: { ... }
-      
-      task_1_last:
-        name: "Week 1 Integration Verification"
-        priority: "P0"
-        description: "Verify all Week 1 changes"
-        # Always include a verification task as the last task of each week
-    ```
-    
-    Rules:
-    - Last task of EVERY week/milestone MUST be an integration verification task
-    - Week names should be descriptive (not just "Week 1")
-    - If a week has dependencies on the previous week, state them explicitly
-    
-    ### 5.4 Dependencies Between Weeks
-    
-    Define explicit dependencies between milestones:
-    
-    ```yaml
-    week1_instructions:
-      dependencies: "None (previous phase complete)"
-      task_order: "task_1_1 → task_1_2 → task_1_3 → task_1_4 → task_1_5"
-      validation: "Task 1.5 (integration verification) must pass before Week 2"
-    
-    week2_instructions:
-      dependencies: "Week 1 complete + tests pass + git tag phase-week1-complete"
-      task_order: "task_2_1 → task_2_2 → task_2_3 → task_2_4"
-      validation: "Task 2.4 must pass before Week 3"
-      note: "Week 2 resolves P1-T1 and P1-T2"
-    ```
-    
-    ---
-    
-    ## 6. Document Lifecycle
-    
-    ### 6.1 Creation Phase
-    
-    1. Planner agent creates the document with ALL three layers
-    2. Fills Layer 1 (AES core) completely
-    3. Fills Layer 2 (instructions) with project-specific values
-    4. Fills Layer 3 (detailed plan) with tasks, tracking, targets
-    5. Reviews the document for completeness using the validation checklist below
-    
-    ### 6.2 Execution Phase
-    
-    1. Implementing agent reads the document
-    2. Follows Step 0-2 (prerequisites, reading, branch)
-    3. Executes Week/milestone tasks in order
-    4. **At each milestone completion**:
-       a. Runs all tests
-       b. Updates `status` and `artifacts` sections
-       c. Appends implementation report
-       d. Creates git tag
-       e. Updates `problem_tracking` status
-    
-    ### 6.3 Completion Phase
-    
-    1. Runs final integration verification
-    2. Updates status to `completed`, percentage to 100
-    3. Generates acceptance report in `docs/`
-    4. Adds `meta.acceptance_report` reference
-    5. Creates final git tag
-    
-    ### 6.4 Archival Phase
-    
-    1. Document remains in `architecture_design/` as a historical record
-    2. Acceptance report remains in `docs/` as a deliverable
-    3. Next phase's planning document references this one via `parent_task_id`
-    
-    ---
-    
-    ## 7. Validation Checklist
-    
-    Before delivering the planning document to the implementing agent, verify:
-    
-    ### Layer 1 (AES Core)
-    - [ ] `meta` has task_id, task_name, version, from_agent, to_agent, session_id
-    - [ ] `status` has current_phase, completion_percentage, completed_items, pending_items
-    - [ ] `intent` has original_intent, constraints, success_criteria, assumptions
-    - [ ] `background.based_on_review` correctly set (true if plan responds to review)
-    - [ ] `background.review_report_id` provided when based_on_review = true
-    - [ ] `references.critical` contains at least 1 item (must-read documents)
-    - [ ] `references.high/medium/low` appropriately categorized
-    - [ ] `artifacts` has files_created, files_modified, decisions_made
-    - [ ] `next_agent_context` has relevant_specs, critical_assumptions, hard_constraints
-    
-    ### Layer 2 (Instructions) — THIS IS WHAT MAKES IT EXECUTABLE
-    - [ ] `implementation_overview` lists ALL steps with duration and priority
-    - [ ] `step0_prerequisite_check` has environment_check, key_files_check, baseline_test_run
-    - [ ] `step1_required_reading` has reading_list with path, key_sections, purpose
-    - [ ] `step2_create_branch` has concrete git commands
-    - [ ] `documentation_update_instructions` has update_checklist_per_milestone (>= 6 items)
-    - [ ] `milestone_execution_instructions` has start/end checklists, git_commit_format
-    - [ ] `phase_completion_instructions` has final_checklist (>= 8 items) and report instructions
-    - [ ] `faq` has >= 5 questions
-    - [ ] `key_decision_points` covers irreversible/high-risk choices
-    
-    ### Layer 3 (Detailed Plan)
-    - [ ] Every task has: name, priority, description, steps, deliverables, acceptance_criteria
-    - [ ] Last task of every week/milestone is an integration verification task
-    - [ ] Week dependencies are explicitly stated
-    - [ ] `problem_tracking` covers ALL issues from the source report (if applicable)
-    - [ ] `score_targets` has baseline and target values (if measurable)
-    
-    ### Quality
-    - [ ] No vague acceptance_criteria ("looks good", "works" → use specific pass/fail conditions)
-    - [ ] No orphaned tasks (every task belongs to a week/milestone)
-    - [ ] No circular dependencies between weeks
-    - [ ] Git commit format is consistent across all instructions
-    - [ ] File paths in `next_agent_context.file_context` are accurate
-    
-    ---
-    
-    ## 8. Common Mistakes
-    
-    ### Mistake 1: Omitting Layer 2 (Instructions)
-    
-    ```
-    # BAD: Plan without instructions — agent reads and guesses
-    plan:
-      week1: ...
-    
-    # GOOD: Plan with instructions — agent follows precisely
-    plan:
-      week1: ...
-    implementation_overview: ...
-    documentation_update_instructions: ...
-    ```
-    
-    ### Mistake 2: Vague acceptance_criteria
-    
-    ```yaml
-    # BAD
     acceptance_criteria:
-      - "Code works"
-      - "Tests pass"
+      - "所有 PRD 中列出的页面都有对应代码"
+      - "代码通过设计系统 lint 检查"
+      - "响应式布局覆盖移动端和桌面端"
+      - "设计报告包含至少 3 个设计决策的理由"
+  ```
+  
+  **关键作用**：
+  1. 明确告诉 Agent "必须产出什么"
+  2. 提供可验证的验收标准
+  
+  #### 2.2.4 execution_constraints（执行约束）
+  
+  **这是防止 Agent 偏离的核心字段**。
+  
+  ```yaml
+  execution_constraints:
+    must_follow:
+      - "严格按照 design_system/components/ 中的组件库"
+      - "颜色只能使用 design_system/tokens/colors.yaml 中定义的值"
+      - "间距必须是 4px 的倍数"
+      - "每个组件必须有对应的 Storybook 文档"
     
-    # GOOD
-    acceptance_criteria:
-      - "2468+ tests pass, 0 fail"
-      - "bandit scan returns 0 findings on new code"
-      - "MCP tools/list returns 8 adaptation.* tools"
-    ```
+    must_not:
+      - "禁止引入新的第三方 UI 库"
+      - "禁止自定义 CSS 颜色值"
+      - "禁止跳过设计评审 Checkpoint"
+      - "禁止修改设计系统的核心组件"
     
-    ### Mistake 3: No report merging instructions
-    
-    ```
-    # BAD: Agent finishes work, document is never updated
-    # (Agent has no instruction to update the planning document)
-    
-    # GOOD: Agent knows exactly when and how to update
-    documentation_update_instructions:
-      update_frequency: "At completion of each Week"
-      update_checklist_per_milestone:
-        - "[ ] Update status.current_phase"
-        # ...
-    ```
-    
-    ### Mistake 4: Missing milestone verification task
-    
-    ```yaml
-    # BAD: Week ends without verification
-    week1:
-      task_1_1: { ... }
-      task_1_2: { ... }
-      # No verification → bugs accumulate
-    
-    # GOOD: Last task is always verification
-    week1:
-      task_1_1: { ... }
-      task_1_2: { ... }
-      task_1_3:
-        name: "Week 1 Integration Verification"
-        # Run full tests, update document, create tag
-    ```
-    
-    ### Mistake 5: No baseline test count
-    
-    ```
-    # BAD: "Run tests" without knowing the baseline
-    # If tests drop from 2468 to 2450, agent might not notice
-    
-    # GOOD: Explicit baseline
-    baseline_test_run:
-      expected_results:
-        - "2468 tests pass, 0 fail"
-        - "This is the regression guard — any reduction is a failure"
-    ```
-    
-    ### Mistake 6: Omitting background when plan is based on review
-    
-    ```
-    # BAD: Plan based on review but no background section
-    # Agent doesn't know why this plan exists
-    
-    # GOOD: Clear background linking to review report
-    background:
-      based_on_review: true
-      review_report_id: "report_20260327_system_review"
-      problem_summary: "System review identified 3 P1 issues..."
-      context_summary: "This plan addresses the critical gaps..."
-    ```
-    
-    ### Mistake 7: Unstructured references without prioritization
-    
-    ```yaml
-    # BAD: Flat references list — agent doesn't know what to read first
-    references:
-      - doc1.md
-      - doc2.md
-      - doc3.md
-    
-    # GOOD: Prioritized references with clear purpose
-    references:
-      critical:
-        - id: "ref-sys-review"
-          name: "System Review Report"
-          path: "planning/2026-03-27_SYSTEM_REVIEW_REPORT.md"
-          purpose: "Must read sections 3-5 before starting"
-      high:
-        - id: "ref-phase19"
-          name: "Phase 19 Design"
-          path: "planning/Phase-19_DYNAMIC-EFFECTS-VISUAL-ENHANCEMENT-PLAN.md"
-          purpose: "Understand the design context"
-    ```
-    
-    ---
-    
-    ## 9. Quick Reference Card
-    
-    ```
-    AES Task Specification = Layer 1 (AES Core) + Layer 2 (Instructions) + Layer 3 (Plan)
-    
-    Profiles:
-      • Planning (aes_profile: "planning")       - Task definition & execution plan
-      • Handoff/Resume (aes_profile: "handoff")  - Task continuity & state snapshot
-      • Execution Report (aes_profile: "execution_report") - Results & audit trail
-    
-    Layer 1 — Standard AES v2.0 (Enhanced with profile-specific sections)
-      §1 meta        §2 status        §3 intent        §4 background
-      §5 references  §6 artifacts     §7 next_agent    §8 governance
-      §9 risks       §10 evolution    §11 execution_policy
-      §12 state_snapshot (handoff)   §13 handoff_contract (handoff)
-      §14 recovery_policy (handoff)  §15 checkpoint_receipts (execution_report)
-      §16 artifact_registry (execution_report)
-    
-    Layer 2 — Implementation Instructions (THE KEY ADDITION)
-      §2A implementation_overview        §2B step0_prerequisite_check
-      §2C step1_required_reading         §2D step2_create_branch
-      §2E documentation_update_instructions    §2F milestone_execution_instructions
-      §2G phase_completion_instructions  §2H faq   §2I key_decision_points
-    
-    Layer 3 — Detailed Plan
-      §3A problem_tracking    §3B score_targets    §3C week/milestone plans
-      §3D new_directories     §3E implementation_reports (appended during execution)
-    
-    MANDATORY for every AES task specification:
-      ✅ Layer 1 sections 1-3 (meta, status, intent) + sections 6-7 (artifacts, next_agent_context)
-      ✅ Layer 2 sections 2A-2G (all implementation instructions)
-      ✅ Layer 3 sections 3C (with verification tasks)
-      ✅ Baseline test count in step0
-      ✅ Documentation update checklist
-      ✅ Implementation report template
-    
-    CONDITIONALLY REQUIRED:
-      ⚠️  Layer 1 §4 background (required when based_on_review = true)
-      ⚠️  Layer 1 §5 references (always required, but may be empty)
-      ⚠️  Profile-specific sections (required when aes_profile matches)
-    
-    PROFILE QUICK REFERENCE:
-    ┌──────────────────┬─────────────────────────────┬─────────────────────────────┐
-    │ Profile          │ When to Use                 │ Key Sections                │
-    ├──────────────────┼─────────────────────────────┼─────────────────────────────┤
-    │ Planning         │ Start new phase             │ All Layer 1-3               │
-    │                  │ Major feature implementation│                             │
-    │ Handoff/Resume   │ Task interruption           │ + state_snapshot            │
-    │                  │ Agent/model switch          │ + handoff_contract          │
-    │                  │ Workflow checkpoint         │ + recovery_policy           │
-    │ Execution Report │ Milestone completion        │ + checkpoint_receipts       │
-    │                  │ Audit trail required        │ + artifact_registry         │
-    │                  │ Workflow node output        │ + validation_rules          │
-    └──────────────────┴─────────────────────────────┴─────────────────────────────┘
-    
-    FILE NAMING: {phase_id}_{descriptive_name}.aes.yaml
-    FILE LOCATION: architecture_design/
-    ACCEPTANCE REPORT: docs/{phase_id}_acceptance_report.md
-    GIT TAGS: {phase}-start-point, {phase}-weekX-complete, {phase}-complete
-    ```
-    
-    ---
-    
-    ## 10. Examples
-    
-    ### Example: Minimal Planning Document Structure
-    
-    For a small 2-week feature:
-    
-    ```yaml
-    # AES (Agent-Executable Specification) v2.0
-    
-    meta:
-      task_id: "task_20260327_feature_x"
-      task_name: "Feature X: Description"
-      version: "2.0.0"
-      schema_version: "2.0.0"                 # AES schema version (must match validation_rules)
-      created_at: "2026-03-27T10:00:00Z"
-      updated_at: "2026-03-27T10:00:00Z"
-      from_agent: "planner"
-      to_agent: "implementer"
-      session_id: "ses_feature_x"
-      parent_task_id: null
-      aes_profile: "planning"                 # planning|handoff|execution_report (REQUIRED)
-      target_agents: ["planner", "implementer", "reviewer"]  # Agents who will interact with this spec
-    
-    status:
-      current_phase: "planning"
-      completion_percentage: 0
-      last_activity: "2026-03-27T10:00:00Z"
-      completed_items: []
-      pending_items:
-        - "Week 1: Core implementation"
-        - "Week 2: Testing and documentation"
-    
-    intent:
-      original_intent: "Implement Feature X to solve Problem Y"
-      constraints:
-        - "Must maintain backward compatibility"
-        - "Baseline: 2468 tests must pass"
-      success_criteria:
-        - "Feature X works correctly"
-        - "2468+ tests pass"
-        - "Performance regression < 5%"
-      assumptions:
-        - "Dependencies already installed"
-    
-    artifacts:
-      files_created: []
-      files_modified: []
-      decisions_made: []
-    
-    next_agent_context:
-      relevant_specs:
-        - "docs/design.md §Feature X"
-      critical_assumptions:
-        - "Database schema already has required tables"
-      hard_constraints:
-        - "DO NOT modify existing API signatures"
-      recommendations: []
-      known_pitfalls:
-        - "Cache invalidation bug in module Z"
-      file_context:
-        important_files:
-          - "src/module_z.py: Core module that needs modification"
-        deprecated_code: []
-        configuration: []
-    
-    risks: []
-    
-    implementation_overview:
-      steps:
-        - step: "0"
-          content: "Prerequisite check"
-          duration: "30 minutes"
-          priority: "P0"
-          mandatory: true
-        - step: "1"
-          content: "Read design docs"
-          duration: "1 hour"
-          priority: "P0"
-          mandatory: true
-        - step: "2"
-          content: "Create branch"
-          duration: "5 minutes"
-          priority: "P0"
-          mandatory: true
-        - step: "3"
-          content: "Execute Week 1"
-          duration: "5 days"
-          priority: "P0"
-          mandatory: true
-        - step: "4"
-          content: "Execute Week 2"
-          duration: "5 days"
-          priority: "P0"
-          mandatory: true
-    
-    step0_prerequisite_check:
-      environment_check:
-        commands: |
-          ./venv/bin/python --version
-          pwd
-          git status
-        expected_results:
-          - "Python 3.9"
-          - "Clean working directory"
-      key_files_check:
-        commands: |
-          ls src/module_z.py
-          ./venv/bin/python -m pytest --collect-only
-        expected_results:
-          - "module_z.py exists"
-          - "2468+ tests collected"
-      baseline_test_run:
-        commands: |
-          ./venv/bin/python -m pytest -x --tb=short
-        expected_results:
-          - "2468 tests pass, 0 fail"
-    
-    step1_required_reading:
-      reading_list:
-        - id: "R1"
-          name: "Feature X Design"
-          path: "docs/design.md"
-          key_sections: "§2 Architecture, §3 API"
-          duration: "30 minutes"
-          purpose: "Understand what to implement"
-    
-    step2_create_branch:
-      commands: |
-        git checkout -b feature-x
-        git tag feature-x-start-point
-      expected_results:
-        - "Branch created"
-        - "Tag created"
-    
-    documentation_update_instructions:
-      purpose: |
-        Update this document at each milestone. Append implementation reports.
-      update_frequency: "At completion of each Week"
-      update_checklist_per_milestone:
-        - "[ ] Update status.current_phase"
-        - "[ ] Update status.completion_percentage"
-        - "[ ] Update status.last_activity"
-        - "[ ] Move completed items to completed_items"
-        - "[ ] Update artifacts"
-        - "[ ] Update meta.updated_at"
-    
-    milestone_execution_instructions:
-      milestone_start_checklist:
-        - "[ ] Previous milestone complete"
-        - "[ ] Tests pass"
-        - "[ ] Status updated"
-        - "[ ] Git tag created"
-      daily_workflow:
-        - "Confirm today's tasks"
-        - "Execute with incremental testing"
-        - "Commit: feature_x[wX][task-Y-Z]: description"
-        - "Run tests, update progress"
-      git_commit_format: "feature_x[wX][task-Y-Z]: {description}"
-      milestone_completion_checklist:
-        - "[ ] All tasks complete"
-        - "[ ] Tests pass"
-        - "[ ] Status updated"
-        - "[ ] Git tag created"
-        - "[ ] Implementation report appended"
-        - "[ ] Verify documentation_update_instructions.update_checklist_per_milestone completed"
-    
-    phase_completion_instructions:
-      final_checklist:
-        - "[ ] All weeks complete"
-        - "[ ] 2468+ tests pass"
-        - "[ ] Status = completed, percentage = 100"
-        - "[ ] Acceptance report generated"
-      final_report_instructions:
-        report_file: "docs/feature_x_acceptance_report.md"
-        report_format: "AES v2.0"
-        report_sections:
-          - "Summary"
-          - "Test results"
-          - "Performance comparison"
-          - "Remaining issues"
-    
-    faq:
-      - question: "Where do I start?"
-        answer: "Read docs/design.md, then start Week 1 Task 1.1"
-      - question: "Can I skip Week 1?"
-        answer: "No. Week 2 depends on Week 1."
-    
-    key_decision_points:
-      - question: "Can I change the API?"
-        answer: "No. Must maintain backward compatibility."
-    
-    plan:
-      week1:
-        name: "Core Implementation"
-        duration: "5 days"
-        priority: "P0"
-        task_1_1:
-          name: "Implement core module"
-          priority: "P1"
-          description: "Create the core module with required classes"
-          steps:
-            - "Create src/feature_x/__init__.py"
-            - "Implement CoreClass with methods A, B, C"
-            - "Write unit tests (>= 10 tests)"
-          deliverables:
-            - "src/feature_x/__init__.py"
-            - "tests/unit/test_feature_x.py"
-          acceptance_criteria:
-            - "CoreClass has methods A, B, C"
-            - "10+ unit tests pass"
-        task_1_2:
-          name: "Week 1 Verification"
-          priority: "P0"
-          description: "Run full regression and update document"
-          steps:
-            - "Run full test suite"
-            - "Update status and artifacts"
-            - "Append Week 1 report"
-            - "Create git tag feature-x-week1-complete"
-          deliverables:
-            - "Updated planning document"
-          acceptance_criteria:
-            - "2468+ tests pass"
-            - "Status updated"
+    max_tokens: 50000           # 输出 token 上限
+    timeout: "2h"               # 执行超时
+    max_files_created: 20       # 创建文件数上限
+    max_file_size: "1MB"        # 单文件大小上限
+  ```
+  
+  **关键作用**：
+  1. `must_follow`：正向约束，Agent 必须遵守
+  2. `must_not`：负向约束，Agent 禁止行为
+  3. 运行时监控 Agent 行为，发现违反时拦截
+  
+  #### 2.2.5 execution_prompt（执行提示词）
+  
+  **给 Agent 的唯一指令，最小化但完整**。
+  
+  ```yaml
+  execution_prompt:
+    template: |
+      你是一个专业的 UI 设计师 Agent。
       
-      week2:
-        name: "Integration and Documentation"
-        duration: "5 days"
-        priority: "P0"
-        task_2_1:
-          name: "Integration testing"
-          priority: "P1"
-          description: "Write integration tests and verify end-to-end"
-          steps:
-            - "Write integration tests"
-            - "Run integration + regression"
-          deliverables:
-            - "tests/integration/test_feature_x.py"
-          acceptance_criteria:
-            - "Integration tests pass"
-            - "Regression tests pass"
-        task_2_2:
-          name: "Week 2 Verification and Acceptance"
-          priority: "P0"
-          description: "Final verification and acceptance report"
-          steps:
-            - "Run full regression"
-            - "Generate acceptance report"
-            - "Update document to completed"
-            - "Create git tag feature-x-complete"
-          deliverables:
-            - "docs/feature_x_acceptance_report.md"
-          acceptance_criteria:
-            - "2468+ tests pass"
-            - "Document status = completed"
+      任务：根据 PRD 生成符合设计系统的页面代码。
+      
+      输入：
+      - PRD 文档：{input_contract.required_artifacts[0].path}
+      - 设计系统：design_system/
+      
+      约束：
+      {execution_constraints.must_follow}
+      
+      禁止：
+      {execution_constraints.must_not}
+      
+      输出：
+      - 页面代码：{output_contract.deliverables[0].path}
+      - 设计报告：{output_contract.deliverables[1].path}
+      
+      验收标准：
+      {output_contract.acceptance_criteria}
+      
+      现在，阅读 PRD 并开始生成页面代码。
     
-    new_directories:
-      - path: "src/feature_x/"
-        description: "Feature X module"
+    variables:
+      - name: "input_contract.required_artifacts[0].path"
+        description: "自动填充输入工件路径"
+      - name: "execution_constraints.must_follow"
+        description: "自动填充约束列表"
+  ```
+  
+  **关键原则**：
+  1. 提示词是给 Agent 的唯一指令
+  2. 所有需要的信息都已经在提示词里
+  3. Agent 不需要"发挥创造力去找文档"
+  
+  #### 2.2.6 checkpoint（检查点配置）
+  
+  ```yaml
+  checkpoint:
+    enabled: true
+    type: "design_review"               # design_review|code_review|acceptance
+    approvers: ["product_manager", "design_lead"]
     
-    new_dependencies: []
-    ```
+    auto_approve_if:
+      - condition: "lint_check: passed"
+      - condition: "design_system_compliance: 100%"
+      - condition: "test_coverage: >= 80%"
     
-    ### Example: Minimal Handoff/Resume Profile
+    manual_approve_required:
+      - condition: "new_component_created: true"
+        approvers: ["design_lead"]
     
-    When a task is interrupted and needs to be handed off to another Agent:
+    timeout: "24h"
+    timeout_action: "archive"           # archive|escalate|auto_reject
+  ```
+  
+  #### 2.2.7 safeguards（风险预防）
+  
+  **定义运行时拦截规则，防止 Agent "聪明反被聪明"**。
+  
+  ```yaml
+  safeguards:
+    deviation_detection:
+      # 拦截规则
+      - trigger: "npm_install_new_package"
+        action: "block"
+        message: "禁止引入新的第三方库，请使用设计系统现有组件"
+      
+      - trigger: "bypass_design_system"
+        action: "block"
+        message: "必须使用设计系统定义的颜色和组件"
+      
+      - trigger: "skip_checkpoint"
+        action: "block"
+        message: "必须经过设计评审 Checkpoint"
+      
+      - trigger: "output_exceed_max_tokens"
+        action: "truncate"
+        message: "输出超过限制，已截断"
+      
+      - trigger: "create_unexpected_file"
+        pattern: "**/*.secret"
+        action: "block"
+        message: "禁止创建敏感文件"
     
-    ```yaml
-    # AES (Agent-Executable Specification) v2.0
-    # aes_profile: handoff
+    fallback:
+      # 降级方案
+      - condition: "design_system_component_insufficient"
+        action: "submit_design_review_request"
+        message: "设计系统组件不满足需求，已提交设计评审请求"
+      
+      - condition: "timeout"
+        action: "save_progress_and_notify_downstream"
+        message: "执行超时，已保存进度并通知下游节点"
+      
+      - condition: "max_retries_exceeded"
+        action: "escalate_to_human"
+        message: "超过最大重试次数，已升级到人工处理"
+  ```
+  
+  **关键作用**：
+  1. 定义触发条件（trigger）和拦截动作（action）
+  2. 运行时监控 Agent 行为
+  3. 发现偏离时主动拦截并提醒
+  
+  ---
+  
+  ## 第三章：AES Profile 机制
+  
+  ### 3.1 三种 Profile
+  
+  | Profile | 阶段 | 用途 | 必需字段 |
+  |---------|------|------|----------|
+  | planning | 任务规划期 | 定义任务、约束、输入输出 | identity, input_contract, output_contract, execution_constraints, execution_prompt |
+  | handoff | 任务交接期 | 状态快照、恢复上下文 | + state_snapshot, handoff_contract |
+  | execution_report | 任务完成期 | 执行结果、审计追溯 | + checkpoint_receipts, artifact_registry |
+  
+  ### 3.2 Profile 演进
+  
+  ```
+  AES 文件生命周期：
+  
+  planning.aes.yaml
+      │
+      │ Agent 开始执行
+      ▼
+  handoff.aes.yaml（如果需要交接或中断恢复）
+      │
+      │ Agent 完成任务
+      ▼
+  execution_report.aes.yaml
+      │
+      │ 归档
+      ▼
+  archive/
+  ```
+  
+  ### 3.3 Handoff Profile 新增字段
+  
+  ```yaml
+  state_snapshot:
+    last_known_good_state: "已生成 3 个页面组件"
+    resume_from: "task_2_1"
+    remaining_work: ["task_2_2", "task_3_1"]
+    artifacts_snapshot:
+      - path: "artifacts/ui/Home.tsx"
+        hash: "sha256:abc123..."
+        status: "complete"
+  
+  handoff_contract:
+    boot_order:
+      - "验证 artifacts_snapshot 完整性"
+      - "读取 state_snapshot 了解当前进度"
+      - "从 resume_from 继续执行"
     
-    meta:
-      task_id: "task_20260327_feature_x_handoff"
-      task_name: "Feature X: Handoff after Week 1"
-      version: "2.0.0"
-      schema_version: "2.0.0"
-      created_at: "2026-03-27T10:00:00Z"
-      updated_at: "2026-04-03T15:30:00Z"  # Updated at handoff time
-      from_agent: "implementation_agent_1"
-      to_agent: "implementation_agent_2"
-      session_id: "ses_feature_x_handoff"
-      parent_task_id: "task_20260327_feature_x"
-      aes_profile: "handoff"
-      target_agents: ["implementation_agent", "handoff_agent", "reviewer"]
+    forbidden_assumptions:
+      - "不要假设上一个 Agent 的 mental state"
+      - "不要假设未记录的上下文"
     
-    status:
-      current_phase: "implementation"
-      completion_percentage: 40
-      last_activity: "2026-04-03T15:30:00Z"
-      completed_items:
-        - "Week 1: Core implementation"
-      pending_items:
-        - "Week 2: Testing and documentation"
-        - "Week 2 Verification and Acceptance"
+    must_verify_before_execute:
+      - "所有 artifacts_snapshot 中的文件存在且 hash 匹配"
+      - "基线测试仍然通过"
+  ```
+  
+  ### 3.4 Execution Report Profile 新增字段
+  
+  ```yaml
+  checkpoint_receipts:
+    - checkpoint_id: "design_review_001"
+      timestamp: "2026-03-28T15:00:00Z"
+      approver: "design_lead"
+      status: "approved"
+      artifacts_hashes: ["sha256:abc123..."]
+  
+  artifact_registry:
+    - artifact_id: "ui-design-v1.0"
+      path: "artifacts/ui/"
+      hash: "sha256:def456..."
+      created_at: "2026-03-28T12:00:00Z"
+      owner: "designer_agent"
+  
+  execution_metrics:
+    duration: "1.5h"
+    tokens_used: 35000
+    files_created: 12
+    files_modified: 3
+    test_coverage: 85
+  ```
+  
+  ---
+  
+  ## 第四章：管理层 Agent 职责
+  
+  ### 4.1 谁撰写 AES
+  
+  管理层 Agent 负责撰写 AES：
+  
+  | 管理层 Agent | 职责 |
+  |-------------|------|
+  | 产品总监 Agent | 撰写战略级 AES，分配给产品经理 Agent |
+  | 产品经理 Agent | 撰写需求级 AES（需求调研、PRD） |
+  | 项目经理 Agent | 撰写规划级 AES，分配给执行层 Agent |
+  | 技术负责人 Agent | 撰写技术方案 AES，分配给开发 Agent |
+  
+  ### 4.2 撰写流程
+  
+  ```
+  管理层 Agent 撰写 AES 流程：
+  
+  1. 接收上游 AES 或用户需求
+     │
+     ▼
+  2. 分解任务为多个工作流节点
+     │
+     ▼
+  3. 为每个节点撰写 AES 文件
+     ├── 定义 identity（谁执行、预计时长）
+     ├── 定义 input_contract（需要什么输入）
+     ├── 定义 output_contract（产出什么）
+     ├── 定义 execution_constraints（约束和禁止）
+     ├── 编写 execution_prompt（最小提示词）
+     ├── 配置 checkpoint（检查点）
+     └── 定义 safeguards（防偏离规则）
+     │
+     ▼
+  4. 编排节点执行顺序（DAG）
+     │
+     ▼
+  5. 分配执行者（executor）
+     │
+     ▼
+  6. 提交给系统分发
+  ```
+  
+  ### 4.3 撰写检查清单
+  
+  ```yaml
+  AES 撰写检查清单：
+  
+  完整性：
+  - [ ] identity 字段完整（node_id, executor, expected_duration）
+  - [ ] input_contract 列出所有必需输入
+  - [ ] output_contract 列出所有交付物
+  - [ ] acceptance_criteria 可验证（不是"看起来不错"）
+  
+  防偏离：
+  - [ ] must_follow 列出所有必须遵守的规则
+  - [ ] must_not 列出所有禁止行为
+  - [ ] safeguards 定义关键拦截规则
+  
+  可执行性：
+  - [ ] execution_prompt 包含所有必要信息
+  - [ ] Agent 只需读 AES，不需要找其他文件
+  - [ ] 文件路径准确存在
+  
+  时效性：
+  - [ ] expected_duration 合理
+  - [ ] timeout 设置合理
+  - [ ] checkpoint timeout 设置合理
+  ```
+  
+  ---
+  
+  ## 第五章：执行层 Agent 职责
+  
+  ### 5.1 执行流程
+  
+  ```
+  执行层 Agent 执行 AES 流程：
+  
+  1. 接收分配的 AES 文件
+     │
+     ▼
+  2. 验证 input_contract
+     ├── 检查所有 required_artifacts 存在
+     ├── 检查所有 required_context 已知
+     └── 如验证失败，报告并等待
+     │
+     ▼
+  3. 读取 execution_prompt
+     └── 这是唯一指令，不需要找其他文件
+     │
+     ▼
+  4. 执行任务
+     ├── 严格遵守 must_follow
+     ├── 绝对禁止 must_not
+     └── 在 max_tokens 和 timeout 范围内工作
+     │
+     ▼
+  5. 产出 output_contract.deliverables
+     └── 每个交付物符合 validation
+     │
+     ▼
+  6. 验证 acceptance_criteria
+     └── 所有标准满足
+     │
+     ▼
+  7. 如有 checkpoint，等待审批
+     │
+     ▼
+  8. 提交执行结果
+  ```
+  
+  ### 5.2 执行层 Agent 禁止行为
+  
+  ```yaml
+  执行层 Agent 绝对禁止：
+  
+  1. 跳过 input_contract 验证
+  2. 不读取 execution_prompt 就开始执行
+  3. 违反 must_not 中的任何规则
+  4. 绕过 checkpoint
+  5. 产出 output_contract 中未列出的文件
+  6. 超过 max_tokens 或 timeout
+  7. 引入 AES 中未提及的外部依赖
+  ```
+  
+  ---
+  
+  ## 第六章：完整示例
+  
+  ### 6.1 UI 设计节点 AES
+  
+  ```yaml
+  # aes-004-ui-design.yaml
+  
+  identity:
+    node_id: "aes-004-ui-design"
+    node_name: "UI 设计"
+    executor: "designer_agent"
+    parent_node: "aes-003-project-planning"
+    expected_duration: "2h"
+  
+  input_contract:
+    required_artifacts:
+      - artifact_id: "prd-v1.0"
+        type: "document"
+        path: "artifacts/prd.md"
+        validation: "必须包含页面列表和交互说明"
+        required: true
     
-    # Core planning sections (abbreviated - same as planning profile)
-    intent:
-      original_intent: "Implement Feature X to solve Problem Y"
-      constraints: ["Must maintain backward compatibility", "Baseline: 2468 tests must pass"]
-      success_criteria: ["Feature X works correctly", "2468+ tests pass", "Performance regression < 5%"]
-      assumptions: ["Dependencies already installed"]
+    required_context:
+      - "产品类型：电商"
+      - "目标用户：C端消费者"
+      - "设计系统版本：v2.0"
     
-    # --- Handoff-specific sections ---
+    forbidden_assumptions:
+      - "不要假设设计风格已确定"
+      - "不要跳过设计规范检查"
+  
+  output_contract:
+    deliverables:
+      - artifact_id: "ui-design-v1.0"
+        type: "code"
+        path: "artifacts/ui/"
+        validation: "必须符合设计系统规范"
+        required: true
+      
+      - artifact_id: "design-report"
+        type: "document"
+        path: "artifacts/design-report.md"
+        validation: "必须说明设计决策"
+        required: true
     
-    state_snapshot:
-      last_known_good_state: "Week 1 completed, core module implemented, 10 unit tests pass"
-      resume_from: "task_2_1"  # Task ID from week2 plan
-      remaining_work: ["task_2_1", "task_2_2"]
-      completed_work: ["task_1_1", "task_1_2"]
-      artifacts_ready_for_handoff:
-        - path: "src/feature_x/__init__.py"
-          integrity_hash: "sha256:abc123..."
-          verified: true
-        - path: "tests/unit/test_feature_x.py"
-          integrity_hash: "sha256:def456..."
-          verified: true
+    acceptance_criteria:
+      - "所有 PRD 中列出的页面都有对应代码"
+      - "代码通过设计系统 lint 检查"
+      - "响应式布局覆盖移动端和桌面端"
+  
+  execution_constraints:
+    must_follow:
+      - "严格按照 design_system/components/ 中的组件库"
+      - "颜色只能使用 design_system/tokens/colors.yaml 中定义的值"
+      - "间距必须是 4px 的倍数"
     
-    handoff_contract:
-      boot_order:
-        - "Read state_snapshot to understand current state"
-        - "Verify artifact_registry integrity hashes"
-        - "Execute resume_from task (task_2_1)"
-        - "Continue with remaining_work list"
-      forbidden_assumptions:
-        - "Assume model capabilities of previous agent"
-        - "Assume previous agent's mental state or unrecorded context"
-      must_verify_before_execute:
-        - "Baseline test count (2468 tests still pass)"
-        - "Artifact integrity hashes match"
-        - "No side-effects from interrupted execution"
-      handoff_instructions: |
-        Previous agent was interrupted during integration testing.
-        All Week 1 deliverables are complete and verified.
-        Start with task_2_1 (integration testing) and proceed through remaining_work.
+    must_not:
+      - "禁止引入新的第三方 UI 库"
+      - "禁止自定义 CSS 颜色值"
+      - "禁止跳过设计评审 Checkpoint"
     
-    recovery_policy:
-      rollback_on_failure: true
-      rollback_target: "task_1_2_complete"  # Git tag or checkpoint
-      fallback_agents: ["implementation_agent_1", "supervisor_agent"]
-      max_retries: 3
-      retry_delay_seconds: 300
+    max_tokens: 50000
+    timeout: "2h"
+  
+  execution_prompt:
+    template: |
+      你是一个专业的 UI 设计师 Agent。
+      
+      任务：根据 PRD 生成符合设计系统的页面代码。
+      
+      输入：
+      - PRD 文档：artifacts/prd.md
+      - 设计系统：design_system/
+      
+      约束：
+      - 严格按照 design_system/components/ 中的组件库
+      - 颜色只能使用 design_system/tokens/colors.yaml 中定义的值
+      - 间距必须是 4px 的倍数
+      
+      禁止：
+      - 禁止引入新的第三方 UI 库
+      - 禁止自定义 CSS 颜色值
+      - 禁止跳过设计评审 Checkpoint
+      
+      输出：
+      - 页面代码：artifacts/ui/
+      - 设计报告：artifacts/design-report.md
+      
+      验收标准：
+      - 所有 PRD 中列出的页面都有对应代码
+      - 代码通过设计系统 lint 检查
+      - 响应式布局覆盖移动端和桌面端
+      
+      现在，阅读 PRD 并开始生成页面代码。
+  
+  checkpoint:
+    enabled: true
+    type: "design_review"
+    approvers: ["product_manager", "design_lead"]
+    auto_approve_if:
+      - condition: "lint_check: passed"
+      - condition: "design_system_compliance: 100%"
+    timeout: "24h"
+  
+  safeguards:
+    deviation_detection:
+      - trigger: "npm_install_new_package"
+        action: "block"
+        message: "禁止引入新的第三方库，请使用设计系统现有组件"
+      
+      - trigger: "bypass_design_system"
+        action: "block"
+        message: "必须使用设计系统定义的颜色和组件"
+      
+      - trigger: "output_exceed_max_tokens"
+        action: "truncate"
+        message: "输出超过限制，已截断"
     
-    # Other sections (abbreviated for brevity)
-    artifacts:
-      files_created: ["src/feature_x/__init__.py", "tests/unit/test_feature_x.py"]
-      files_modified: []
-      decisions_made: ["Used approach A for core module implementation"]
+    fallback:
+      - condition: "design_system_component_insufficient"
+        action: "submit_design_review_request"
+      - condition: "timeout"
+        action: "save_progress_and_notify_downstream"
+  ```
+  
+  ### 6.2 后端开发节点 AES
+  
+  ```yaml
+  # aes-006-backend-development.yaml
+  
+  identity:
+    node_id: "aes-006-backend-development"
+    node_name: "后端开发"
+    executor: "backend_agent"
+    parent_node: "aes-003-project-planning"
+    expected_duration: "4h"
+  
+  input_contract:
+    required_artifacts:
+      - artifact_id: "prd-v1.0"
+        type: "document"
+        path: "artifacts/prd.md"
+        validation: "必须包含 API 需求和数据模型"
+        required: true
+      
+      - artifact_id: "api-spec-v1.0"
+        type: "document"
+        path: "artifacts/api-spec.yaml"
+        validation: "必须符合 OpenAPI 3.0 规范"
+        required: true
     
-    next_agent_context:
-      relevant_specs: ["docs/design.md §Feature X"]
-      critical_assumptions: ["Database schema already has required tables"]
-      hard_constraints: ["DO NOT modify existing API signatures"]
-      recommendations: ["Review integration test design before proceeding"]
-      known_pitfalls: ["Cache invalidation bug in module Z"]
+    required_context:
+      - "技术栈：Node.js + Express + PostgreSQL"
+      - "数据库版本：PostgreSQL 14"
+      - "API 版本：v1"
     
-    # Implementation instructions and plan sections continue...
-    # (Same structure as planning profile, but starting from week2)
-    ```
+    forbidden_assumptions:
+      - "不要假设数据库 schema 已创建"
+      - "不要假设有现成的 ORM 模型"
+  
+  output_contract:
+    deliverables:
+      - artifact_id: "backend-code-v1.0"
+        type: "code"
+        path: "backend/"
+        validation: "必须通过 lint 和测试"
+        required: true
+      
+      - artifact_id: "db-migrations"
+        type: "code"
+        path: "backend/migrations/"
+        validation: "必须可重复执行"
+        required: true
+      
+      - artifact_id: "api-docs"
+        type: "document"
+        path: "artifacts/api-docs.md"
+        validation: "必须与代码一致"
+        required: true
     
-    ### Example: Minimal Execution Report Profile
+    acceptance_criteria:
+      - "所有 API 端点实现并测试通过"
+      - "数据库迁移可成功执行"
+      - "测试覆盖率 >= 80%"
+      - "API 文档与代码一致"
+  
+  execution_constraints:
+    must_follow:
+      - "使用 src/models/ 中的数据模型"
+      - "API 路由必须符合 artifacts/api-spec.yaml"
+      - "所有数据库操作必须使用事务"
+      - "所有 API 必须有错误处理"
     
-    When a milestone is completed and results need to be documented:
+    must_not:
+      - "禁止硬编码敏感信息"
+      - "禁止跳过单元测试"
+      - "禁止修改其他 Agent 的代码"
+      - "禁止使用未在 package.json 中声明的依赖"
     
-    ```yaml
-    # AES (Agent-Executable Specification) v2.0
-    # aes_profile: execution_report
+    max_tokens: 80000
+    timeout: "4h"
+  
+  execution_prompt:
+    template: |
+      你是一个专业的后端开发 Agent。
+      
+      任务：根据 PRD 和 API 规范实现后端 API。
+      
+      输入：
+      - PRD 文档：artifacts/prd.md
+      - API 规范：artifacts/api-spec.yaml
+      - 数据模型：src/models/
+      
+      约束：
+      - 使用 src/models/ 中的数据模型
+      - API 路由必须符合 artifacts/api-spec.yaml
+      - 所有数据库操作必须使用事务
+      - 所有 API 必须有错误处理
+      
+      禁止：
+      - 禁止硬编码敏感信息
+      - 禁止跳过单元测试
+      - 禁止修改其他 Agent 的代码
+      - 禁止使用未在 package.json 中声明的依赖
+      
+      输出：
+      - 后端代码：backend/
+      - 数据库迁移：backend/migrations/
+      - API 文档：artifacts/api-docs.md
+      
+      验收标准：
+      - 所有 API 端点实现并测试通过
+      - 数据库迁移可成功执行
+      - 测试覆盖率 >= 80%
+      - API 文档与代码一致
+      
+      现在，阅读 API 规范并开始实现。
+  
+  checkpoint:
+    enabled: true
+    type: "code_review"
+    approvers: ["technical_lead"]
+    auto_approve_if:
+      - condition: "test_coverage: >= 80%"
+      - condition: "lint_check: passed"
+      - condition: "security_scan: passed"
+    timeout: "24h"
+  
+  safeguards:
+    deviation_detection:
+      - trigger: "hardcoded_secret"
+        pattern: "(password|api_key|secret)\\s*=\\s*['\"]"
+        action: "block"
+        message: "禁止硬编码敏感信息，请使用环境变量"
+      
+      - trigger: "skip_test"
+        action: "block"
+        message: "必须编写并运行单元测试"
+      
+      - trigger: "modify_other_agent_code"
+        action: "block"
+        message: "禁止修改其他 Agent 的代码"
+      
+      - trigger: "undeclared_dependency"
+        action: "block"
+        message: "禁止使用未在 package.json 中声明的依赖"
     
-    meta:
-      task_id: "task_20260327_feature_x_report"
-      task_name: "Feature X: Completion Report"
-      version: "2.0.0"
-      schema_version: "2.0.0"
-      created_at: "2026-03-27T10:00:00Z"
-      updated_at: "2026-04-10T18:00:00Z"  # Updated at completion
-      from_agent: "implementation_agent"
-      to_agent: "reviewer"
-      session_id: "ses_feature_x_complete"
-      parent_task_id: "task_20260327_feature_x"
-      aes_profile: "execution_report"
-      target_agents: ["reviewer", "stakeholder", "workflow_orchestrator"]
-    
-    status:
-      current_phase: "completed"
-      completion_percentage: 100
-      last_activity: "2026-04-10T18:00:00Z"
-      completed_items:
-        - "Week 1: Core implementation"
-        - "Week 2: Testing and documentation"
-        - "Week 2 Verification and Acceptance"
-      pending_items: []
-    
-    # Core planning sections (abbreviated)
-    intent:
-      original_intent: "Implement Feature X to solve Problem Y"
-      constraints: ["Must maintain backward compatibility", "Baseline: 2468 tests must pass"]
-      success_criteria: ["Feature X works correctly", "2468+ tests pass", "Performance regression < 5%"]
-      assumptions: ["Dependencies already installed"]
-    
-    # --- Execution Report-specific sections ---
-    
-    checkpoint_receipts:
-      - checkpoint_id: "week1_complete"
-        timestamp: "2026-04-03T15:30:00Z"
-        verified_by: "implementation_agent_1"
-        artifacts_snapshot:
-          - path: "src/feature_x/__init__.py"
-            integrity_hash: "sha256:abc123..."
-          - path: "tests/unit/test_feature_x.py"
-            integrity_hash: "sha256:def456..."
-        test_results:
-          baseline_tests: 2468
-          passing_tests: 2468
-          failing_tests: 0
-          new_tests_added: 10
-      - checkpoint_id: "week2_complete"
-        timestamp: "2026-04-10T18:00:00Z"
-        verified_by: "implementation_agent_2"
-        artifacts_snapshot:
-          - path: "tests/integration/test_feature_x.py"
-            integrity_hash: "sha256:ghi789..."
-          - path: "docs/feature_x_acceptance_report.md"
-            integrity_hash: "sha256:jkl012..."
-        test_results:
-          baseline_tests: 2468
-          passing_tests: 2478  # 10 new tests added
-          failing_tests: 0
-          new_tests_added: 10
-    
-    artifact_registry:
-      - id: "artifact_core_module"
-        path: "src/feature_x/__init__.py"
-        description: "Core module for Feature X"
-        created_at: "2026-04-03T10:00:00Z"
-        modified_at: "2026-04-03T14:00:00Z"
-        integrity_hash: "sha256:abc123..."
-        verified: true
-        dependencies: []
-      - id: "artifact_unit_tests"
-        path: "tests/unit/test_feature_x.py"
-        description: "Unit tests for Feature X"
-        created_at: "2026-04-03T15:00:00Z"
-        modified_at: "2026-04-03T15:00:00Z"
-        integrity_hash: "sha256:def456..."
-        verified: true
-        dependencies: ["artifact_core_module"]
-      - id: "artifact_integration_tests"
-        path: "tests/integration/test_feature_x.py"
-        description: "Integration tests for Feature X"
-        created_at: "2026-04-10T16:00:00Z"
-        modified_at: "2026-04-10T17:00:00Z"
-        integrity_hash: "sha256:ghi789..."
-        verified: true
-        dependencies: ["artifact_core_module", "artifact_unit_tests"]
-      - id: "artifact_acceptance_report"
-        path: "docs/feature_x_acceptance_report.md"
-        description: "Acceptance report for Feature X"
-        created_at: "2026-04-10T18:00:00Z"
-        modified_at: "2026-04-10T18:00:00Z"
-        integrity_hash: "sha256:jkl012..."
-        verified: true
-        dependencies: ["artifact_core_module", "artifact_unit_tests", "artifact_integration_tests"]
-    
-    validation_rules:
-      profile_specific_sections:
-        planning: ["meta", "status", "intent", "artifacts", "next_agent_context", "implementation_overview", "plan"]
-        handoff: ["state_snapshot", "handoff_contract", "recovery_policy"]
-        execution_report: ["checkpoint_receipts", "artifact_registry", "validation_rules"]
-      allowed_profiles: ["planning", "handoff", "execution_report"]
-      mandatory_for_all:
-        - "meta"
-        - "status"
-        - "intent"
-        - "artifacts"
-        - "next_agent_context"
-    
-    implementation_summary:
-      total_duration_days: 10
-      actual_start_date: "2026-03-27"
-      actual_completion_date: "2026-04-10"
-      total_agents_involved: 2
-      handoff_count: 1
-      total_commits: 24
-      lines_added: 1247
-      lines_removed: 89
-    
-    quality_metrics:
-      test_coverage_percentage: 92
-      performance_regression_percentage: 2.3
-      code_complexity_score: 15
-      documentation_completeness_score: 88
-    
-    acceptance_evidence:
-      - type: "test_results"
-        description: "All 2478 tests pass (baseline 2468 + 10 new)"
-        verified_by: "implementation_agent_2"
-        timestamp: "2026-04-10T17:30:00Z"
-      - type: "performance_test"
-        description: "Performance regression < 5% requirement met (actual 2.3%)"
-        verified_by: "implementation_agent_2"
-        timestamp: "2026-04-10T17:45:00Z"
-      - type: "code_review"
-        description: "Code review completed, no critical issues found"
-        verified_by: "reviewer_agent"
-        timestamp: "2026-04-10T18:00:00Z"
-      - type: "acceptance_report"
-        description: "Acceptance report generated and signed off"
-        verified_by: "stakeholder"
-        timestamp: "2026-04-10T18:00:00Z"
-    
-    # Other sections abbreviated...
-    ```
-    
-    ---
-    
-    ## 11. Frequently Asked Questions (FAQ)
-    
-    ### Profile Selection & Usage
-    
-    **Q1: When should I use Planning vs. Handoff vs. Execution Report profile?**
-    - Use **Planning** when starting a new phase, implementing a major feature, or responding to a review with multiple issues.
-    - Use **Handoff** when task execution is interrupted, switching Agents/models, or preserving state across sessions.
-    - Use **Execution Report** when a milestone is complete, audit trail is needed, or results need certification.
-    
-    **Q2: Can a single AES document change profiles during its lifecycle?**
-    Yes. Update the `aes_profile` field and add/remove profile-specific sections. Example evolution:
-    1. Start as Planning Profile (`aes_profile: "planning"`)
-    2. If interrupted, update to Handoff Profile (`aes_profile: "handoff"`) and add `state_snapshot`, `handoff_contract`
-    3. When complete, update to Execution Report Profile (`aes_profile: "execution_report"`) and add `checkpoint_receipts`, `artifact_registry`
-    
-    **Q3: What's the minimum required for each profile?**
-    - **Planning**: All Layer 1-3 core sections (meta, status, intent, artifacts, next_agent_context, implementation instructions, plan)
-    - **Handoff**: All Planning sections PLUS `state_snapshot`, `handoff_contract`, `recovery_policy`
-    - **Execution Report**: All Planning sections PLUS `checkpoint_receipts`, `artifact_registry`, `validation_rules`
-    
-    ### Handoff & Recovery
-    
-    **Q4: What should be included in `state_snapshot` for effective handoff?**
-    - `last_known_good_state`: Human-readable description of current state
-    - `resume_from`: Exact task ID or checkpoint to continue from
-    - `remaining_work`: List of pending tasks
-    - `completed_work`: List of completed tasks
-    - `artifacts_ready_for_handoff`: Verified artifacts with integrity hashes
-    
-    **Q5: How do I ensure a smooth handoff between different AI models?**
-    - Use `handoff_contract.boot_order` to specify exact startup sequence
-    - List all `forbidden_assumptions` (e.g., "Don't assume previous model's capabilities")
-    - Include `must_verify_before_execute` checklist (tests, artifact integrity)
-    - Provide clear `handoff_instructions` with context about interruption
-    
-    **Q6: What recovery policies should I set for critical tasks?**
-    - `rollback_on_failure: true` for tasks that can't leave system in broken state
-    - `rollback_target`: Git tag or checkpoint to revert to
-    - `fallback_agents`: Alternative agents if primary fails
-    - `max_retries` and `retry_delay_seconds` for automatic recovery
-    
-    ### Execution Report & Validation
-    
-    **Q7: What evidence should be captured in `checkpoint_receipts`?**
-    - Timestamp and agent who verified the checkpoint
-    - Artifact snapshot with integrity hashes
-    - Test results (baseline vs. current counts)
-    - Any quality metrics collected at that point
-    
-    **Q8: How detailed should `artifact_registry` be?**
-    Include all significant artifacts: source files, tests, documentation, configuration.
-    Each entry should have: path, description, creation/modification times, integrity hash, verification status, and dependencies.
-    
-    **Q9: What validation rules ensure AES document consistency?**
-    - `validation_rules.profile_specific_sections`: Map profiles to required sections
-    - `validation_rules.allowed_profiles`: Valid values for `aes_profile`
-    - `validation_rules.mandatory_for_all`: Sections required regardless of profile
-    
-    ### General Questions
-    
-    **Q10: How does AES relate to AGENTS.md and project conventions?**
-    - **AES**: Document structure, task specification, continuity features
-    - **AGENTS.md**: Project-specific commands, test suites, code style, environment
-    - Always reference AGENTS.md for execution details (Python path, test commands)
-    
-    **Q11: Can I use AES for very small tasks (under 30 minutes)?**
-    Not recommended. AES is designed for tasks requiring traceability, handoff, or audit trails.
-    For small fixes, use regular conversation or simple checklists.
-    
-    **Q12: How should I version AES documents?**
-    - `version`: Document version (e.g., "2.0.0")
-    - `schema_version`: AES schema version (must match `validation_rules`)
-    - Update `meta.updated_at` on every significant change
-    - Use `parent_task_id` to link related documents across phases
-    
-    ---
-    
-    ## 12. Relationship to AGENTS.md
-    
-    This guide complements `AGENTS.md` (project-level agent instructions) by providing document-level formatting rules. When writing an AES planning document:
-    
-    - **AGENTS.md** defines: Python interpreter, test commands, exclusions, code style
-    - **This guide** defines: Document structure, instruction format, report template
-    
-    The planning document should reference AGENTS.md for project-specific conventions (e.g., test exclusion list, Python path).
-    
-    ---
-    
-    ## Appendix A: Tooling Examples (Optional)
-    
-    ### JSON Schema Starter Template
-    
-    For teams wanting to validate AES documents programmatically, here's a minimal JSON Schema starter:
-    
-    ```json
-    {
-      "$schema": "http://json-schema.org/draft-2020-12/schema",
-      "$id": "https://example.com/aes-schema/v2.0.json",
-      "title": "AES (Agent-Executable Specification) v2.0",
-      "description": "Schema for validating AES task specifications",
-      "type": "object",
-      "properties": {
-        "meta": {
-          "type": "object",
-          "properties": {
-            "task_id": { "type": "string", "pattern": "^task_\\d{8}_[a-zA-Z0-9_-]+$" },
-            "task_name": { "type": "string" },
-            "version": { "type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$" },
-            "schema_version": { "type": "string", "const": "2.0.0" },
-            "aes_profile": {
-              "type": "string",
-              "enum": ["planning", "handoff", "execution_report"]
-            },
-            "created_at": { "type": "string", "format": "date-time" },
-            "updated_at": { "type": "string", "format": "date-time" }
-          },
-          "required": ["task_id", "task_name", "version", "schema_version", "aes_profile", "created_at", "updated_at"],
-          "additionalProperties": true
-        },
-        "status": {
-          "type": "object",
-          "properties": {
-            "current_phase": { "type": "string" },
-            "completion_percentage": { "type": "number", "minimum": 0, "maximum": 100 }
-          },
-          "required": ["current_phase", "completion_percentage"],
-          "additionalProperties": true
-        },
-        "intent": {
-          "type": "object",
-          "properties": {
-            "original_intent": { "type": "string" },
-            "constraints": { "type": "array", "items": { "type": "string" } },
-            "success_criteria": { "type": "array", "items": { "type": "string" } }
-          },
-          "required": ["original_intent", "constraints", "success_criteria"],
-          "additionalProperties": true
+    fallback:
+      - condition: "database_connection_failed"
+        action: "use_mock_database"
+      - condition: "timeout"
+        action: "save_progress_and_notify_downstream"
+  ```
+  
+  ---
+  
+  ## 第七章：验证与工具
+  
+  ### 7.1 JSON Schema 验证
+  
+  ```json
+  {
+    "$schema": "http://json-schema.org/draft-2020-12/schema",
+    "$id": "https://example.com/aes-schema/v3.0.json",
+    "title": "AES v3.0 Schema",
+    "type": "object",
+    "required": ["identity", "input_contract", "output_contract", "execution_constraints", "execution_prompt"],
+    "properties": {
+      "identity": {
+        "type": "object",
+        "required": ["node_id", "node_name", "executor", "expected_duration"],
+        "properties": {
+          "node_id": { "type": "string", "pattern": "^aes-\\d+-[a-z0-9-]+$" },
+          "node_name": { "type": "string" },
+          "executor": { "type": "string" },
+          "expected_duration": { "type": "string" }
         }
       },
-      "required": ["meta", "status", "intent"],
-      "additionalProperties": true,
-      "if": {
-        "properties": { "meta": { "properties": { "aes_profile": { "const": "handoff" } } } }
+      "input_contract": {
+        "type": "object",
+        "required": ["required_artifacts"],
+        "properties": {
+          "required_artifacts": { "type": "array" },
+          "required_context": { "type": "array" },
+          "forbidden_assumptions": { "type": "array" }
+        }
       },
-      "then": {
-        "required": ["state_snapshot", "handoff_contract", "recovery_policy"]
+      "output_contract": {
+        "type": "object",
+        "required": ["deliverables", "acceptance_criteria"],
+        "properties": {
+          "deliverables": { "type": "array" },
+          "acceptance_criteria": { "type": "array", "minItems": 1 }
+        }
       },
-      "else": {
-        "if": {
-          "properties": { "meta": { "properties": { "aes_profile": { "const": "execution_report" } } } }
-        },
-        "then": {
-          "required": ["checkpoint_receipts", "artifact_registry", "validation_rules"]
+      "execution_constraints": {
+        "type": "object",
+        "required": ["must_follow", "must_not"],
+        "properties": {
+          "must_follow": { "type": "array", "minItems": 1 },
+          "must_not": { "type": "array", "minItems": 1 },
+          "max_tokens": { "type": "integer" },
+          "timeout": { "type": "string" }
+        }
+      },
+      "execution_prompt": {
+        "type": "object",
+        "required": ["template"],
+        "properties": {
+          "template": { "type": "string" },
+          "variables": { "type": "array" }
+        }
+      },
+      "checkpoint": {
+        "type": "object",
+        "properties": {
+          "enabled": { "type": "boolean" },
+          "type": { "type": "string" },
+          "approvers": { "type": "array" },
+          "timeout": { "type": "string" }
+        }
+      },
+      "safeguards": {
+        "type": "object",
+        "properties": {
+          "deviation_detection": { "type": "array" },
+          "fallback": { "type": "array" }
         }
       }
     }
-    ```
-    
-    ### Lint Rule Example (Python)
-    
-    Simple Python script to check AES document structure:
-    
-    ```python
-    # aes_lint.py - Basic structural validation for AES documents
-    import yaml
-    import sys
-    
-    REQUIRED_SECTIONS = ["meta", "status", "intent", "artifacts", "next_agent_context"]
-    
-    PROFILE_SPECIFIC = {
-        "handoff": ["state_snapshot", "handoff_contract", "recovery_policy"],
-        "execution_report": ["checkpoint_receipts", "artifact_registry", "validation_rules"]
-    }
-    
-    def lint_aes(filepath):
-        with open(filepath, 'r') as f:
-            doc = yaml.safe_load(f)
-        
-        errors = []
-        
-        # Check required sections
-        for section in REQUIRED_SECTIONS:
-            if section not in doc:
-                errors.append(f"Missing required section: {section}")
-        
-        # Check profile-specific sections
-        profile = doc.get("meta", {}).get("aes_profile")
-        if profile in PROFILE_SPECIFIC:
-            for section in PROFILE_SPECIFIC[profile]:
-                if section not in doc:
-                    errors.append(f"Profile '{profile}' requires section: {section}")
-        
-        # Check schema_version matches
-        schema_version = doc.get("meta", {}).get("schema_version")
-        if schema_version != "2.0.0":
-            errors.append(f"schema_version should be '2.0.0', got '{schema_version}'")
-        
-        return errors
-    
-    if __name__ == "__main__":
-        if len(sys.argv) != 2:
-            print("Usage: python aes_lint.py <aes_file.yaml>")
-            sys.exit(1)
-        
-        errors = lint_aes(sys.argv[1])
-        if errors:
-            print(f"❌ {len(errors)} validation errors found:")
-            for err in errors:
-                print(f"  - {err}")
-            sys.exit(1)
-        else:
-            print("✅ AES document structure is valid")
-            sys.exit(0)
-    ```
-    
-    ### Usage Recommendations
-    
-    1. **Start simple**: Use the lint script for basic validation during development.
-    2. **Gradual adoption**: Add JSON Schema validation in CI/CD pipelines once team is comfortable.
-    3. **Profile awareness**: Ensure tooling respects profile-specific section requirements.
-    4. **Customization**: Extend with project-specific rules (e.g., required test counts, naming conventions).
-    
-    ---
-    
-    *Guide Version*: 1.2.0
-    *Created*: 2026-03-27
-    *Updated*: 2026-03-28
-    *Based on*: Phase 13/14 planning experience + Phase 19-25 AES实战
-    *License*: MIT
-    ========== END OF GUIDE CONTENT ==========
+  }
+  ```
+  
+  ### 7.2 验证工具
+  
+  ```python
+  # aes_validator.py
+  
+  import yaml
+  import sys
+  from pathlib import Path
+  
+  REQUIRED_SECTIONS = [
+      "identity",
+      "input_contract",
+      "output_contract",
+      "execution_constraints",
+      "execution_prompt"
+  ]
+  
+  def validate_aes(filepath: str) -> list:
+      errors = []
+      
+      with open(filepath, 'r') as f:
+          doc = yaml.safe_load(f)
+      
+      # 检查必需 sections
+      for section in REQUIRED_SECTIONS:
+          if section not in doc:
+              errors.append(f"Missing required section: {section}")
+      
+      # 检查 identity
+      if "identity" in doc:
+          identity = doc["identity"]
+          if not identity.get("node_id"):
+              errors.append("identity.node_id is required")
+          if not identity.get("executor"):
+              errors.append("identity.executor is required")
+      
+      # 检查 input_contract
+      if "input_contract" in doc:
+          ic = doc["input_contract"]
+          if not ic.get("required_artifacts"):
+              errors.append("input_contract.required_artifacts is required")
+      
+      # 检查 output_contract
+      if "output_contract" in doc:
+          oc = doc["output_contract"]
+          if not oc.get("deliverables"):
+              errors.append("output_contract.deliverables is required")
+          if not oc.get("acceptance_criteria"):
+              errors.append("output_contract.acceptance_criteria is required")
+      
+      # 检查 execution_constraints
+      if "execution_constraints" in doc:
+          ec = doc["execution_constraints"]
+          if not ec.get("must_follow"):
+              errors.append("execution_constraints.must_follow is required")
+          if not ec.get("must_not"):
+              errors.append("execution_constraints.must_not is required")
+      
+      # 检查 execution_prompt
+      if "execution_prompt" in doc:
+          ep = doc["execution_prompt"]
+          if not ep.get("template"):
+              errors.append("execution_prompt.template is required")
+      
+      return errors
+  
+  if __name__ == "__main__":
+      if len(sys.argv) != 2:
+          print("Usage: python aes_validator.py <aes_file.yaml>")
+          sys.exit(1)
+      
+      errors = validate_aes(sys.argv[1])
+      if errors:
+          print(f"❌ {len(errors)} validation errors:")
+          for err in errors:
+              print(f"  - {err}")
+          sys.exit(1)
+      else:
+          print("✅ AES v3.0 structure is valid")
+          sys.exit(0)
+  ```
+  
+  ---
+  
+  ## 第八章：常见问题
+  
+  ### Q1: AES 文件应该多大？
+  
+  **目标：100-200 行，控制在 5KB 以内**。
+  
+  如果超过，说明：
+  1. 节点拆分不够细
+  2. 提示词过于冗长
+  3. 约束列表过于详细
+  
+  ### Q2: 如何防止 Agent 只读 AES 但跳过其他文件？
+  
+  **核心原则：AES 必须自包含**。
+  
+  1. 所有约束、输入输出都在 AES 内
+  2. execution_prompt 包含所有必要信息
+  3. Agent 不需要找其他文件
+  4. 运行时监控 Agent 行为，发现偏离时拦截
+  
+  ### Q3: 管理层 Agent 和执行层 Agent 如何分工？
+  
+  ```
+  管理层 Agent（产品经理/项目经理）：
+  - 撰写 AES
+  - 编排工作流
+  - 分配任务
+  - 监控进度
+  
+  执行层 Agent（设计师/前端/后端/QA）：
+  - 读取 AES
+  - 执行任务
+  - 产出 Artifact
+  - 报告进度
+  ```
+  
+  ### Q4: 如何处理 Agent 执行失败？
+  
+  1. **自动重试**：safeguards.fallback 定义重试策略
+  2. **降级执行**：降低要求继续执行
+  3. **人工介入**：升级到人类处理
+  4. **回滚**：恢复到上一个 Checkpoint
+  
+  ### Q5: AES 与现有 Phase 15 规划的关系？
+  
+  Phase 15 实施文档（phase15-x_implementation.aes.yaml）是**元级别 AES**：
+  - 定义如何构建系统
+  - 不是工作流节点执行包
+  
+  未来生成的 AES 实例（运行时）是**工作流节点执行包**：
+  - 由管理层 Agent 撰写
+  - 分发给执行层 Agent 执行
+  - 存储在 runtime/aes/instances/
+  
+  ---
+  
+  ## 附录：快速参考卡
+  
+  ```
+  AES v3.0 工作流节点执行包 = {
+    identity:           节点身份（谁执行、预计时长）
+    input_contract:     输入契约（需要什么、禁止假设什么）
+    output_contract:    输出契约（产出什么、验收标准）
+    execution_constraints: 执行约束（必须遵守、禁止行为）
+    execution_prompt:   执行提示词（唯一指令）
+    checkpoint:         检查点（质量门禁）
+    safeguards:         风险预防（防偏离规则）
+  }
+  
+  核心原则：
+  1. 自包含：所有信息在一个文件内
+  2. 最小提示词：Agent 只需读 AES
+  3. 防偏离：明确定义 must_follow 和 must_not
+  4. 可拦截：运行时监控并拦截
+  
+  文件命名：aes-{sequence}-{short-name}.yaml
+  文件位置：runtime/aes/instances/
+  目标大小：100-200 行 / 5KB 以内
+  ```
+  
+  ---
+  
+  *指南版本*: 3.0.0
+  *创建日期*: 2026-03-28
+  *基于*: 3.9.2_AES_Workflow_Node_Packaging_Design_Philosophy.md
+  *适用范围*: 管理层 Agent 撰写 AES、执行层 Agent 执行 AES
+
+# ========== 8. Governance (RECOMMENDED) ==========
+governance:
+  audit_trail_id: "aes_guide_v3"
+  risk_level: "L3"
+  approval_required: ["chief_architect"]
+
+# ========== 9. Risks (RECOMMENDED) ==========
+risks:
+  - issue: "管理层 Agent 不熟悉 AES v3.0 格式"
+    severity: "medium"
+    mitigation: "提供模板和示例，逐步培训"
+    status: "pending"
+  - issue: "执行层 Agent 偏离率高于预期"
+    severity: "medium"
+    mitigation: "加强 safeguards 规则，运行时拦截"
+    status: "pending"
+
+# ========== 10. Evolution (OPTIONAL) ==========
+evolution:
+  hil_level: "L4"
+  architecture_mode: "Multi-Agent"
+  complexity_score: 7
