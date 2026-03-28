@@ -2,6 +2,14 @@
 
 **多 Agent 系统的任务连续性规范** — 让任务在 Agent 间无缝传递、断点恢复、持续演进。
 
+## English Abstract
+
+**AES (Agent-Executable Specification)** is a task continuity specification for multi-agent systems, enabling seamless task handoff, checkpoint recovery, and continuous evolution across agents.
+
+**Core Value**: Solves "task amnesia" in multi-agent collaboration by providing a structured task state package that is serializable, transferable, and resumable. Defines three key states: Planning, Handoff/Resume, and Execution Report.
+
+**Ecosystem Positioning**: Complements A2A (Agent-to-Agent communication) and MCP (Model Context Protocol) by focusing on task context, constraints, progress tracking, and recovery.
+
 ---
 
 ## 核心价值
