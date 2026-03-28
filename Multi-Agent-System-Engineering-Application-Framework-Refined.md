@@ -1,4 +1,4 @@
-# 3.9.1-v4 多Agent系统工程应用框架（前沿增强版）
+# 多Agent系统工程应用框架
 
 **基于动态适应与协同演化理论的多Agent系统在企业工作流中的工程应用框架研究**
 
@@ -8,166 +8,45 @@
 
 | 项目 | 信息 |
 |------|------|
-| **文档编号** | 3.9.1-v4 |
-| **文档类型** | 工程应用理论文献（前沿增强版） |
-| **生成日期** | 2026年3月27日 |
-| **修订日期** | 2026年3月28日 |
-| **版本** | v4.0 |
-| **作者** | 系统架构研究团队 |
-| **修订依据** | 3.9.4_3.9.1-v3_Frontier-Enhancement-Plan.aes.yaml |
-| **前置修订** | 3.9.3_3.9.1-v2_AES-A2A-Collaboration-Review-and-Revision-Plan.aes.yaml |
-| **前沿增强规划** | 3.9.4_3.9.1-v3_Frontier-Enhancement-Plan.aes.yaml |
-| **理论依据** | theory_whitepaper_v2.2 (DACES/HWAT/AEAS/PDA) |
-
-## 修订说明
-
-本版本基于 3.9.3 AES/A2A 融合审查报告，在 3.9.1-v2 基础上进行系统性修订：
-
-| 修订类别 | 修订内容 | 对应Finding |
-|---------|---------|------------|
-| **理论定位补足** | 新增 AES 任务级协作载体定义，明确 AES/A2A/MCP 三者边界 | F-01 |
-| **证据边界清理** | 删除或降级未经充分核验的 2026 生态规模数据 | F-03 |
-| **节点模型重写** | 将工作流节点重定义为 Task + AES + Actor + Checkpoint + Artifact | F-02 |
-| **交付物体系升级** | 卡点主工件改为 AES，Markdown 作为人类可读派生件 | F-04 |
-| **协作治理补足** | 新增所有权、冲突策略、审批回执、工件哈希等治理字段 | F-05 |
-
-**v4.0 前沿增强**（基于 3.9.4 前沿增强工作包）：
-
-| 增强类别 | 增强内容 | 优先级 |
-|---------|---------|-------|
-| **运行时语义增强** | 新增 §4.8 Durable Execution 与一致性重放 | P0 |
-| **治理控制平面增强** | 新增 §5.4 Policy-as-Code Control Plane | P0 |
-| **评估控制闭环增强** | 新增 §5.5 Eval-Driven Control Plane | P1 |
-| **观测语义对齐** | §4.5 新增 OTel GenAI SemConv 对齐子节 | P1 |
-| **AES互操作路线图** | §7.4 新增 AES 标准化演进与跨组织互操作路线 | P1 |
+| **文档编号** | AES-FRAMEWORK-001 |
+| **文档类型** | 工程应用理论框架 |
+| **发布日期** | 2026 年 3 月 28 日 |
+| **版本** | v1.0 |
+| **理论依据** | 动态适应与协同演化系统理论 (DACES/HWAT/AEAS/PDA) |
 
 **关键词**: 多Agent系统, 动态适应, 协同演化, HIL-5分级, Task/Subagent架构, 韧性工程, 可观测性, PDA测量, MCP/A2A协议, Harness Engineering, AES任务级协作载体, 断点恢复, Durable Execution, Policy-as-Code, Eval-Driven Control, OTel GenAI SemConv, AES Interoperability
 
 ---
 
-## 审查背景与方法论
+## Summary
 
-### 审查缘起
+This document presents a multi-agent system engineering application framework based on dynamic adaptation and collaborative evolution theory, addressing the core challenge of enterprise workflow intelligent transformation: **how to systematically achieve a smooth transition from "one-sentence requirement" to multi-agent autonomous workflow execution**.
 
-本文档旨在将 theory_whitepaper_v2.2.md 中的核心理论体系（DACES、HWAT、HIL-5、AEAS、PDA）进行工程领域的应用研究转化，聚焦于一个具体的工程命题：**如何使用多Agent系统对企业级工作流进行逐步替代**。
+The framework takes DACES theory as the meta-framework, Harness Engineering as the engineering methodology, MCP/A2A protocol system as the communication infrastructure, AES as the task-level collaboration carrier, hierarchical standardization as the governance architecture, and controlled evolution as the security guarantee, constructing a complete path from theory to practice. The core interaction paradigm of the system is: **users only need to propose a natural language requirement in one sentence, and the system autonomously completes requirement clarification, research analysis, multi-agent workflow orchestration and execution, sets hard checkpoints at key nodes for user review, and finally delivers results that meet the requirement objectives**.
 
-该命题的核心约束条件是：系统默认初始的HIL层次为"一句话需求"——用户只需提出一句自然语言需求，系统即可自主完成需求访谈和调研分析，然后自主编排multi-Agent工作流，在过程中设置硬性卡点（Hard Checkpoint）让用户对卡点环节的交付物进行评审，系统能自主推进工作流，最终交付符合用户需求目标的成果（可部署的软件、可安装的桌面应用、一批最终文档等）。
+**Key Features**:
 
-### 审查范围与引用来源
+1. **Durable Execution Runtime Semantics**: Introduces exit/async/sync three-level persistence modes, deterministic replay, side-effect isolation, and compensation/Saga patterns, providing platform-level reliability guarantees for workflow execution.
+2. **Policy-as-Code Control Plane**: Based on Cedar-style principal-action-resource-context authorization model, upgrades governance from embedded rules to decoupled, verifiable policy engine.
+3. **Eval-Driven Control Plane**: Elevates evaluation from auxiliary metrics to first-class citizen of control loop, supporting offline/online/shadow evaluation and gate-driven decision-making.
+4. **OTel GenAI Semantic Alignment**: Maps observability metrics from custom naming to OTel GenAI SemConv gen_ai.* standard semantics, supporting external compatibility and ecosystem integration.
+5. **AES Interoperability Roadmap**: Adds standardized evolution roadmap for Schema Registry, Delta Sync, and Cross-org Profile.
 
-本次审查综合了以下七类文献来源：
+**Core Innovations**:
 
-**第一类：核心理论文献**
-- theory_whitepaper_v2.2.md — DACES/HWAT/AEAS/PDA 完整理论体系
-- 3.8_多Agent系统在企业工作流中的标准化架构与治理框架报告.md v2.0 — 分层标准化理论与受控演化
-
-**第二类：前沿协议与Harness工程文献（共15篇）**
-- 1.1_Claude-Skills-Architecture.md — Claude Skills架构与BDI推理循环
-- 1.2_Prompt-to-Harness-Engineering.md — 从Prompt Engineering到Harness Engineering四阶段演进
-- 1.3_Harness-Multi-Agent-System.md — Harness在多Agent系统中的理论原理
-- 1.10_MCP-Protocol-Analysis.md — MCP协议深度调研（2026版）
-- 1.11_Agent-Skill-Registry.md — Skill注册表机制与能力发现
-- 2.7.18_A2A-Agent-To-Agent-Protocol.md — A2A协议调研（2026版）
-- 2.7.25_What-Is-The-Model-Context-Protocol-Mcp.md — MCP官方定义
-- 2.7.26_Adk-With-Agent2Agent-A2A-Protocol.md — Google ADK + A2A集成
-- 2.7.28_Mcp-Transport-Mechanism-Research-Report-Stdio-And-Streamable-Http-Specification-Detailed.md — MCP传输机制
-- 2.7.29_Announcing-The-Agent2Agent-Protocol-A2A.md — A2A官方发布文
-- 2.7.32_Unrolling-The-Codex-Agent-Loop.md — Codex Agent Loop核心执行逻辑
-- 2.7.17_Capability-Discovery.md — 能力发现与多智能体能力协商
-- 2.7.1_Harness-Engineering-Leveraging-Codex-In-An-Agent-First-World.md — OpenAI Harness工程实践
-
-**第三类：多Agent协作与边界理论文献（共8篇）**
-- 1.6_Multi-Agent-Collaboration-Ecosystem.md — 多Agent协作生态（2026版）
-- 1.7_Single-Agent-Multi-Skill-Boundary.md — 单Agent多Skill与多Agent相变界限
-- 1.9_Multi-Agent-Context-Isolation.md — 多Agent上下文隔离与选择性共享
-- 1.12.1_Academic_Single-to-Multi-Agent-Review.md — 学术综述：从单Agent到多Agent
-- 3.2.1_Agent-Skill-Script-Boundary-Phase-Transition.md — 三层相变统一理论
-- 3.2.4_Game-Theory-Perspective-Multi-Agent-Fuzzy-Boundary-Problem.md — 博弈论与Harness工程
-- 3.2.5_Dynamic-Boundary-Emergence-Based-on-Game-Theory-And-Harness-Engineering.md — 动态边界涌现
-- 2.3_Dynamic-Adaptation-Collaborative-Evolution.md — DACES元理论框架
-
-**第四类：工作流与企业实践文献（共5篇）**
-- 2.4_Human-Workflow-Replacement-Theory.md — HWAT人类工作流替代理论
-- 2.4.1_Enterprise-Workflow-Abstract-Model.md — 企业工作流抽象模型
-- 2.4.3_Workflow-Model-Evolution-Matching.md — 工作流演进与DACES匹配分析
-- 2.6_Agent-System-Software-Development.md — Agent系统重构软件开发工作流
-
-**第五类：工程架构设计文档（2篇）**
-- future_architecture_vision.md — OpenCode 2.0多智能体系统架构设计愿景
-- phase0_agent_standardization.md — Agent标准化架构定义（工程落地）
-
-**第六类：Task/Subagent与韧性工程文献**
-- 3.2.6_Programming_Agent_Task_Tool_and_Subagent_Architecture_In-Depth_Research_Report.md — Task/Subagent架构深度研究
-- 2.7.9_Resilience-Engineering-Research-Report.md — 韧性工程研究报告
-- 2.7.21_Opentelemetry-Tracing.md — OpenTelemetry分布式追踪
-
-**第七类：AES任务级协作载体（新增）**
-- AES_Planning_Document_Writing_Guide.aes.yaml — AES规范本地指南（三层结构：AES Core + Implementation Instructions + Plan & Artifacts）
-- AES README (GitHub specs) — AES广义定位：多Agent协作中的任务连续性与断点恢复规范
-- 3.9.3_3.9.1-v2_AES-A2A-Collaboration-Review-and-Revision-Plan.aes.yaml — AES/A2A融合审查报告
-
-**第八类：前沿增强参考源（v4新增）**
-- LangGraph Durable Execution — 持久化执行、确定性重放、durability modes（exit/async/sync）（来源：https://docs.langchain.com/oss/javascript/langgraph/durable-execution）
-- Temporal Durable Execution Platform — 持久化工作流、Compensation/Saga、pause/resume（来源：https://temporal.io/）
-- Cedar Policy Language — 声明式授权策略语言、principal-action-resource-context模型（来源：https://docs.cedarpolicy.com/）
-- OpenTelemetry Semantic Conventions for Generative AI — GenAI/Agent/MCP观测语义规范（Status: Development）（来源：https://opentelemetry.io/docs/specs/semconv/gen-ai/）
-- OpenTelemetry Generative AI Events — gen_ai.evaluation.result 评估事件规范（来源：https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-events/）
-
-**联网检索与公开可核验信息（2026年3月）**：
-
-> **证据边界说明**：以下信息均标注来源与可核验状态，区分"官方公开可核验""行业观察""经验假设"三级。
-
-| 信息 | 数据 | 来源 | 可核验状态 |
-|------|------|------|-----------|
-| A2A支持组织 | 150+ | Google Developers Blog, Linux Foundation公告 | ✅ 官方公开可核验 |
-| A2A转入Linux Foundation | 2026年6月 | Linux Foundation公告 | ✅ 官方公开可核验 |
-| MCP定位 | "AI时代的USB-C接口" | Anthropic官方描述 | ✅ 官方公开可核验 |
-| MCP捐赠Linux Foundation (AAIF) | 已完成 | Linux Foundation AAIF公告 | ✅ 官方公开可核验 |
-| A2A兼容Agent数量 | 行业增长中，具体数字未获官方公开核验 | — | ⚠️ 经验观察，非确定性数据 |
-| A2A企业部署率 | 行业观察，具体数字未获官方公开核验 | — | ⚠️ 经验观察，非确定性数据 |
-| A2A市场规模 | 行业预估，具体数字未获官方公开核验 | — | ⚠️ 经验观察，非确定性数据 |
-| MCP服务器数量 | 数千级（官方公开描述为"thousands"） | Anthropic官方 | ✅ 官方公开可核验 |
-| Human-in-the-Loop Checkpoint | LangGraph/LangChain等框架的标准模式 | 框架文档 | ✅ 可核验 |
-
----
-
-## 执行摘要
-
-本文提出一套基于动态适应与协同演化理论的多Agent系统工程应用框架，旨在解决企业工作流智能化转型中的核心挑战：**如何系统化地实现从"一句话需求"到多Agent自主工作流执行的平稳过渡**。
-
-框架以DACES理论为元框架，以Harness Engineering为工程方法论，以MCP/A2A协议体系为通信基础设施，以AES为任务级协作载体，以分层标准化为治理架构，以受控演化为安全保障，构建了从理论到实践的完整路径。系统的核心交互范式是：**用户仅需提出一句自然语言需求，系统即自主完成需求澄清、调研分析、多Agent工作流编排与执行，并在关键节点设置硬性卡点供用户评审，最终交付符合需求目标的成果**。
-
-**v3.0修订核心增强**：
-
-1. **AES任务级协作载体**：新增AES作为任务状态、背景、约束、交接、执行报告与断点恢复的统一载体，补足v2中"工作流节点承载物缺位"的核心问题
-2. **A2A/MCP/AES三层分工**：明确A2A负责运行时消息协作与任务委派，MCP负责工具与外部能力连接，AES负责任务状态与断点恢复
-3. **证据边界规范化**：清理所有未经充分核验的生态规模数据，区分"官方公开可核验""行业观察""经验假设"三级证据
-4. **工作流节点重定义**：将节点从纯步骤模型改为 Task + AES + Actor + Checkpoint + Artifact 五元组，支持可交接、可恢复、可审计
-5. **交付物体系升级**：卡点主工件升级为AES（.aes.yaml），Markdown作为人类可读派生件
-6. **多Agent共建治理**：补充所有权、冲突策略、审批回执、工件哈希等企业级协作治理字段
-
-**v4.0前沿增强**：
-
-7. **Durable Execution 运行时语义**：引入 exit/async/sync 三级持久化模式、确定性重放、副作用隔离与补偿/Saga模式，为工作流执行提供平台级可靠性保障
-8. **Policy-as-Code Control Plane**：基于 Cedar 风格的 principal-action-resource-context 授权模型，将治理从内嵌规则升级为可解耦、可验证的策略引擎
-9. **Eval-Driven Control Plane**：将评估从附属指标升级为控制闭环的一等公民，支持离线/在线/影子评估和门禁驱动决策
-10. **OTel GenAI 语义对齐**：将可观测性指标从自定义命名映射到 OTel GenAI SemConv gen_ai.* 标准语义，支持对外兼容与生态集成
-11. **AES 互操作路线图**：新增 Schema Registry、Delta Sync、Cross-org Profile 的标准化演进路线
-
-**核心创新**：
-1. **"一句话需求"范式**：基于Harness Engineering的意图理解→需求展开→工作流编排的端到端自主执行机制
-2. **硬性卡点(Hard Checkpoint)机制**：在需求确认、方案设计、实现完成三个关键节点设置不可跳过的用户评审门禁
-3. **Task/Subagent执行架构**：会话隔离机制可节省70-90%主会话上下文，支持串行/并行/混合执行模式
-4. **AES任务级协作载体**：作为工作流节点的权威承载物，支持断点恢复、跨Agent接手、状态连续性
-5. **韧性工程四大能力映射**：响应/监控/学习/预期能力与硬性卡点的系统性整合
-6. **PDA测量与HIL动态调整**：基于部署后自治测量实现L2-L5无缝切换
-7. **分层标准化工程框架**：核心层🔴-结构层🟡-实现层🟢的三层标准化架构
-8. **选择性上下文共享**：基于文献1.9的选择性共享范式（135%性能基准）
-9. **动态边界涌现**：基于博弈论的"边界即均衡"机制
-10. **Durable Execution 语义**：引入 exit/async/sync 三级持久化模式和确定性重放机制（v4新增）
-11. **Policy-as-Code 治理**：基于 Cedar 风格的声明式授权策略引擎（v4新增）
-12. **Eval-Driven 控制闭环**：评估结果驱动的门禁、晋升和回滚决策（v4新增）
-13. **OTel GenAI 观测对齐**：与行业标准 GenAI/Agent/MCP 语义规范兼容的可观测性架构（v4新增）
+1. **"One-Sentence Requirement" Paradigm**: End-to-end autonomous execution mechanism based on Harness Engineering's intent understanding → requirement expansion → workflow orchestration.
+2. **Hard Checkpoint Mechanism**: Sets non-skippable user review gates at three key nodes: requirement confirmation, solution design, and implementation completion.
+3. **Task/Subagent Execution Architecture**: Session isolation mechanism saves 70-90% main session context, supports serial/parallel/hybrid execution modes.
+4. **AES Task-Level Collaboration Carrier**: Serves as authoritative carrier for workflow nodes, supporting breakpoint recovery, cross-agent handover, and state continuity.
+5. **Resilience Engineering Four-Capability Mapping**: Systematic integration of response/monitoring/learning/anticipation capabilities with hard checkpoints.
+6. **PDA Measurement and HIL Dynamic Adjustment**: Enables seamless L2-L5 transitions based on post-deployment autonomy measurement.
+7. **Hierarchical Standardization Engineering Framework**: Three-layer standardization architecture of core layer 🔴, structure layer 🟡, and implementation layer 🟢.
+8. **Selective Context Sharing**: Based on selective sharing paradigm (135% performance baseline).
+9. **Dynamic Boundary Emergence**: Based on game theory "boundary as equilibrium" mechanism.
+10. **Durable Execution Semantics**: Introduces exit/async/sync three-level persistence modes and deterministic replay mechanism.
+11. **Policy-as-Code Governance**: Cedar-style declarative authorization policy engine.
+12. **Eval-Driven Control Loop**: Evaluation result-driven gate, promotion, and rollback decisions.
+13. **OTel GenAI Observability Alignment**: Observability architecture compatible with industry standard GenAI/Agent/MCP semantic specifications.
 
 ---
 
@@ -222,10 +101,9 @@
 1. **Harness Engineering**（OpenAI, 2026）：3名工程师5个月构建100万行代码（零手写），效率10倍提升
 2. **Agent Lifecycle FSM**：动态角色管理节省40-60%计算资源，成为2026年行业标准
 3. **选择性上下文共享**：选择性共享基准135%，远超强制隔离（100%）和完全共享（85%）
-4. **Task/Subagent架构**：会话隔离机制可节省70-90%主会话上下文（文献3.2.6）
+4. **Task/Subagent架构**：会话隔离机制可节省70-90%主会话上下文
 5. **A2A协议生态**：150+组织支持，提供标准化的Agent间通信基础设施（来源：Google Developers Blog、Linux Foundation公告）
 6. **MCP协议生态**：数千个服务器实现（来源：Anthropic官方），已捐赠Linux Foundation (AAIF)
-7. **AES任务级协作载体**：三层结构支持断点恢复、跨Agent交接和状态连续性（来源：AES README）
 
 ### 1.3 现有理论框架的局限
 
@@ -241,8 +119,8 @@
 8. **韧性工程整合缺失**：缺乏与韧性工程四大能力的系统性映射
 9. **可观测性架构缺失**：分布式Agent执行的可追踪性和可诊断性不足
 10. **PDA测量体系缺失**：部署后自治能力的持续测量与HIL动态调整机制
-11. **任务级协作载体缺失**：缺少统一的任务状态、交接和断点恢复承载物（v3新增识别）
-12. **工作流节点可恢复性缺失**：节点不支持从任意中断点恢复或跨Agent接手（v3新增识别）
+11. **任务级协作载体缺失**：缺少统一的任务状态、交接和断点恢复承载物
+12. **工作流节点可恢复性缺失**：节点不支持从任意中断点恢复或跨Agent接手
 
 ### 1.4 研究目标与贡献
 
@@ -252,18 +130,18 @@
 1. **范式定义**：定义"一句话需求"范式的完整交互模型和系统架构要求
 2. **硬性卡点机制**：提出三阶段不可跳过的用户评审门禁设计
 3. **Task/Subagent架构**：整合会话隔离、上下文管理、并行执行的完整架构
-4. **AES任务级协作载体**：将AES作为工作流节点的权威承载物，支持断点恢复、跨Agent接手和状态连续性（v3新增）
-5. **工作流节点五元组模型**：Task + AES + Actor + Checkpoint + Artifact，支持可交接、可恢复、可审计（v3新增）
+4. **AES任务级协作载体**：将AES作为工作流节点的权威承载物，支持断点恢复、跨Agent接手和状态连续性
+5. **工作流节点五元组模型**：Task + AES + Actor + Checkpoint + Artifact，支持可交接、可恢复、可审计
 6. **韧性工程整合**：将四大韧性能力映射到硬性卡点机制
 7. **PDA测量体系**：集成部署后自治测量，支持HIL动态调整
 8. **可观测性架构**：基于OpenTelemetry的分布式追踪与审计设计
 9. **理论整合**：整合DACES、HWAT、分层标准化、博弈论边界协商、上下文隔离等理论
 10. **工程框架**：提出可操作的三层标准化架构与受控演化机制
-11. **协作治理体系**：补充所有权、冲突策略、审批回执、工件哈希等企业级协作治理机制（v3新增）
-12. **Durable Execution 运行时语义**：引入平台级持久化执行模式，与AES任务工件形成"运行时+工件"双层保障（v4新增）
-13. **Policy-as-Code 控制平面**：将治理从内嵌规则升级为可解耦的声明式策略系统（v4新增）
-14. **Eval-Driven 控制闭环**：评估作为控制平面的一等公民，支持离线/在线/影子评估和门禁驱动决策（v4新增）
-15. **OTel GenAI 语义对齐**：可观测性指标与行业标准语义规范兼容（v4新增）
+11. **协作治理体系**：补充所有权、冲突策略、审批回执、工件哈希等企业级协作治理机制
+12. **Durable Execution 运行时语义**：引入平台级持久化执行模式，与AES任务工件形成"运行时+工件"双层保障
+13. **Policy-as-Code 控制平面**：将治理从内嵌规则升级为可解耦的声明式策略系统
+14. **Eval-Driven 控制闭环**：评估作为控制平面的一等公民，支持离线/在线/影子评估和门禁驱动决策
+15. **OTel GenAI 语义对齐**：可观测性指标与行业标准语义规范兼容
 
 ---
 
@@ -305,7 +183,7 @@
 
 #### 2.2.1 Harness的核心定义
 
-基于文献1.2、1.3、2.7.1的综合分析，Harness Engineering是OpenAI于2026年正式提出的工程方法论，核心理念是 **"Humans steer, agents execute"**（人类掌舵，Agent执行）。
+Harness Engineering是OpenAI于2026年正式提出的工程方法论，核心理念是 **"Humans steer, agents execute"**（人类掌舵，Agent执行）。
 
 **Harness在本框架中的角色定义**：
 > Harness是包裹在Agent执行环境外的"马具层"，将不确定的模型行为转化为稳定、可预测、可审计的生产力输出。在"一句话需求"范式中，Harness承担三重职责：
@@ -346,7 +224,7 @@
 1. **HWAT HIL-4委托级**：人类参与度5-20%，但覆盖高风险决策节点
 2. **Human-in-the-Loop最佳实践**（2026年行业共识）：Approval queues、Confidence thresholds、Draft mode UX、Decision trails、Escalation triggers五种标准模式
 3. **增强工作流门禁**：在工作流中设置不可绕过的质量门禁
-4. **韧性工程四大能力**：响应/监控/学习/预期能力与卡点的映射（详见§3.2.6）
+4. **韧性工程四大能力**：响应/监控/学习/预期能力与卡点的映射
 
 #### 2.3.2 三阶段硬性卡点设计
 
@@ -418,9 +296,7 @@ HIL L1 (辅助级)
 | **配置/基础设施** | CI/CD流水线、容器编排 | code-generator → workflow-gatekeeper | 可执行、幂等、可回滚 |
 | **混合交付** | 文档+代码+配置的组合 | 多Agent协作（Task/Subagent架构） | 各子交付物满足各自质量标准 |
 
-#### 2.4.2 三类交付物层级（v3新增）
-
-基于 3.9.3 审查结论，将工作流中的交付物区分为三个层级：
+#### 2.4.2 三类交付物层级
 
 | 层级 | 名称 | 格式 | 用途 | 优先级 |
 |------|------|------|------|--------|
@@ -457,7 +333,7 @@ HIL L1 (辅助级)
 
 #### 3.2.1 DACES：动态适应与协同演化系统理论
 
-**双态演化模型**（与 theory_whitepaper_v2.2 §3.1 保持一致）：
+**双态演化模型**：
 
 | 状态 | 名称 | 特征 | 触发条件 |
 |------|------|------|---------|
@@ -470,7 +346,7 @@ HIL L1 (辅助级)
 Architecture = f(Complexity, Standardization, Knowledge, Risk)
 ```
 
-**相变阈值与迟滞区间**（与 theory_whitepaper_v2.2 §5.1-5.5 保持一致，标注为"经验假设-待校准"）：
+**相变阈值与迟滞区间**：
 
 | 相变方向 | 触发阈值 | 回退阈值 | 迟滞区间 | 证据类型 |
 |---------|---------|---------|---------|---------|
@@ -490,9 +366,9 @@ Effective_Complexity = w₁×T + w₂×(1-S) + w₃×(1-K)
 - 默认权重：w₁=0.5, w₂=0.3, w₃=0.2
 ```
 
-> **说明**：以上阈值和权重为经验假设，需在具体场景中校准。详见 theory_whitepaper_v2.2 附录F。
+> **说明**：以上阈值和权重为经验假设，需在具体场景中校准。
 
-**AEAS四核六层自适应架构**（与 theory_whitepaper_v2.2 §8.1 保持一致）：
+**AEAS四核六层自适应架构**：
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -508,9 +384,9 @@ Effective_Complexity = w₁×T + w₂×(1-S) + w₃×(1-K)
 └──────────────────────────────────────────────────────────┘
 ```
 
-**与3.9.1架构的映射关系**：
+**与V 1.0架构的映射关系**：
 
-| 3.9.1架构层 | AEAS对应 | 四核归属 |
+| V 1.0架构层 | AEAS对应 | 四核归属 |
 |------------|---------|---------|
 | 用户交互层 | L6 交互层 | 决策核 |
 | HIL管理控制器 | L5 决策层 | 决策核 |
@@ -524,7 +400,7 @@ Effective_Complexity = w₁×T + w₂×(1-S) + w₃×(1-K)
 
 #### 3.2.2 HWAT：人类工作流替代理论
 
-**HIL-5分级框架**（与 theory_whitepaper_v2.2 §4.1 完全一致）：
+**HIL-5分级框架**：
 
 | 等级 | 名称 | 人类决策占比 | AI权限范围 | 典型场景 |
 |------|------|------------|-----------|---------|
@@ -534,9 +410,9 @@ Effective_Complexity = w₁×T + w₂×(1-S) + w₃×(1-K)
 | L4 | 委托级 | 5-20% | 高风险任务执行 | 部署发布、故障修复 |
 | L5 | 自主级 | <5% | 全部权限（有边界） | 开放性研究、策略备选 |
 
-> **HIL-5判定量表**：完整判定量表见 theory_whitepaper_v2.2 附录E。核心判定维度包括：执行权限、人类审批、自动回滚、事后审计、人类兜底、工具权限、决策透明度、失败处理。
+> **HIL-5判定量表**：完整判定量表见相关理论文献。核心判定维度包括：执行权限、人类审批、自动回滚、事后审计、人类兜底、工具权限、决策透明度、失败处理。
 
-**过渡触发条件**（与 theory_whitepaper_v2.2 §4.2 保持一致）：
+**过渡触发条件**：
 
 | 指标 | 观察窗口 | 最小样本 | 阈值（经验假设） |
 |------|---------|---------|----------------|
@@ -579,8 +455,6 @@ Effective_Complexity = w₁×T + w₂×(1-S) + w₃×(1-K)
 
 #### 3.2.4 博弈论边界协商与动态边界涌现
 
-基于文献3.2.4和3.2.5的综合研究：
-
 **核心命题**：**Agent边界应是博弈结果而非博弈前提**。边界应在Agent协作过程中通过博弈动态涌现。
 
 **边界熵监控**：
@@ -599,8 +473,6 @@ H_B = -∑_{i=1}^{n} p_i log₂(p_i)
 
 #### 3.2.5 上下文隔离与选择性共享
 
-基于文献1.9的研究：
-
 | 范式 | 性能基准 | 适用场景 | "一句话需求"中的角色 |
 |------|---------|---------|-------------------|
 | **强制隔离** | 100%（基准） | 安全敏感场景 | 核心层🔴数据 |
@@ -615,8 +487,6 @@ H_B = -∑_{i=1}^{n} p_i log₂(p_i)
 **关键发现**：当Agent数量>5时，完全共享模式性能下降50%。选择性共享是多Agent高效协作的关键保障。
 
 #### 3.2.6 韧性工程整合
-
-基于文献2.7.9的研究，将韧性工程四大核心能力映射到硬性卡点机制：
 
 **韧性工程四大能力定义**：
 
@@ -655,7 +525,7 @@ H_B = -∑_{i=1}^{n} p_i log₂(p_i)
 | L4 | 已管理级 | 量化管理、预测性维护 |
 | L5 | 优化级 | 持续改进、自适应韧性 |
 
-### 3.3 协议与协作体系：MCP、A2A与AES（v3重写）
+### 3.3 协议与协作体系：MCP、A2A与AES
 
 #### 3.3.1 三层分工：运行时协议与任务级载体
 
@@ -665,7 +535,7 @@ H_B = -∑_{i=1}^{n} p_i log₂(p_i)
 |------|------|---------|-------------|---------|
 | **通信层** | A2A (Agent-to-Agent Protocol) | Agent间运行时消息协作与任务委派 | Google A2A Specification v0.3.0 | Agent ↔ Agent |
 | **工具层** | MCP (Model Context Protocol) | Agent与外部工具/数据源的能力连接 | Anthropic/Linux Foundation MCP Specification | Agent → Tool |
-| **任务载体层** | AES (Agent-Executable Specification) | 任务状态、背景、约束、交接、执行报告与断点恢复 | 内部规范（AES v2.0） | Task + Agent + Artifact |
+| **任务载体层** | AES (Agent-Executable Specification) | 任务状态、背景、约束、交接、执行报告与断点恢复 | AES 规范 | Task + Agent + Artifact |
 
 > **三者关系**：A2A传递消息，MCP连接工具，AES承载任务状态。AES不是A2A或MCP的协议替代物，而是在运行时协议之上的任务级协作与连续性保障层。
 
@@ -785,7 +655,7 @@ agent_card:
     audit_level: "full"
 ```
 
-#### 3.3.4 AES：任务级协作载体（v3新增）
+#### 3.3.4 AES：任务级协作载体
 
 ##### 3.3.4.1 AES的定义与定位
 
@@ -802,7 +672,7 @@ agent_card:
 
 ##### 3.3.4.2 AES三层结构
 
-AES采用三层结构（与 AES_Planning_Document_Writing_Guide.aes.yaml 和 AES README 保持一致）：
+AES采用三层结构：
 
 | 层 | 名称 | 内容 | 在工作流中的角色 |
 |----|------|------|----------------|
@@ -812,7 +682,7 @@ AES采用三层结构（与 AES_Planning_Document_Writing_Guide.aes.yaml 和 AES
 
 ##### 3.3.4.3 AES与DACES/HWAT的理论映射
 
-AES作为任务级协作载体，与DACES理论的工作流原子模型（theory_whitepaper_v2.2 §6.2）形成自然映射：
+AES作为任务级协作载体，与DACES理论的工作流原子模型形成自然映射：
 
 | AES字段 | DACES/HWAT映射 | 说明 |
 |---------|---------------|------|
@@ -908,7 +778,6 @@ Agent B 读取 AES → 从步骤6开始继续执行
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-> **v3架构变更**：AES不以独立物理层的形式增加，而是作为"跨层工件/契约层"嵌入架构中。AES与编排、执行、持久化、审计均有关联，但自身不是一个独立进程或服务。这种表达方式避免了"层级过多"的可读性问题（参见3.9.3 RISK-M1）。
 
 ### 4.2 核心组件设计
 
@@ -1033,8 +902,6 @@ Agent A 需要与 Agent B 协作：
 
 #### 4.2.5 Task/Subagent执行架构
 
-基于文献3.2.6的深度研究，整合Task/Subagent架构作为"一句话需求"范式的核心执行模式。
-
 **核心架构**：
 
 ```
@@ -1141,17 +1008,6 @@ def select_execution_mode(tasks: List[Task]) -> ExecutionMode:
         return ExecutionMode.HYBRID
 ```
 
-**与3.2.6研究成果的一致性**：
-
-| 维度 | 3.2.6研究成果 | 3.9.1-v3实现 | 一致性 |
-|------|-------------|-------------|--------|
-| 会话隔离 | 独立session_id实现上下文隔离 | ✅ 完全采用 | 高 |
-| 上下文节省 | 可节省70-90%主会话上下文 | ✅ 目标值：70-90% | 高 |
-| 执行模式 | 串行/并行/混合三种模式 | ✅ 三种模式全覆盖 | 高 |
-| 模型选择 | Claude Opus 4.6、Claude 3.5 Sonnet、GPT-4o | ✅ 推荐相同模型 | 高 |
-| 结果聚合 | 摘要返回机制 | ✅ summary_return配置 | 高 |
-| 长期记忆 | 跨会话记忆和上下文持久化 | ✅ 记忆管理配置 | 中 |
-
 #### 4.2.6 长期记忆与上下文持久化
 
 **记忆架构设计**：
@@ -1232,7 +1088,7 @@ class HILDynamicAdjuster:
         """
         基于PDA评分和执行历史动态调整HIL级别
         
-        与 theory_whitepaper_v2.2 §8A.1.3 保持一致
+        
         """
         score = self._calculate_hil_score(task, history, pda_score)
         
@@ -1274,7 +1130,7 @@ class HILDynamicAdjuster:
         return min(max(score, 0), 100)
 ```
 
-#### 4.3.2 PDA测量体系（与theory_whitepaper_v2.2 §8A.1.2一致）
+#### 4.3.2 PDA测量体系
 
 **PDA指标簇**（4大类16小类）：
 
@@ -1330,7 +1186,6 @@ PDA_Score = w₁·Task_Autonomy + w₂·Trajectory_Quality + w₃·Risk_Control 
 
 ### 4.4 架构相变决策树
 
-基于文献3.2.1的三层相变统一理论：
 
 ```
 当前架构：Script
@@ -1356,8 +1211,6 @@ PDA_Score = w₁·Task_Autonomy + w₂·Trajectory_Quality + w₃·Risk_Control 
 ### 4.5 可观测性架构
 
 #### 4.5.1 OpenTelemetry集成设计
-
-基于文献2.7.21的研究，设计面向多Agent系统的可观测性架构：
 
 **三大信号支柱**：
 
@@ -1466,7 +1319,7 @@ distributed_tracing:
 }
 ```
 
-#### 4.5.3 OTel GenAI 语义对齐（v4新增）
+#### 4.5.3 OTel GenAI 语义对齐
 
 基于 OpenTelemetry Semantic Conventions for Generative AI Systems（Status: Development）的对齐，本框架的可观测性架构从自定义命名逐步映射到行业标准 `gen_ai.*` 语义，提升对外兼容性和生态集成能力。
 
@@ -1615,11 +1468,9 @@ permission_attenuation:
       description: "Kill Switch触发时"
 ```
 
-### 4.7 工作流执行引擎设计（v3重写）
+### 4.7 工作流执行引擎设计
 
 #### 4.7.1 工作流节点五元组模型
-
-> **v3核心变更**：基于3.9.3 Finding F-02，将工作流节点从纯步骤模型重定义为 **Task + AES + Actor + Checkpoint + Artifact** 五元组。每个节点都是一个可交接、可恢复、可审计的完整任务单元。
 
 **节点五元组定义**：
 
@@ -1982,11 +1833,11 @@ resume_policy:
 9. **PDA测量器**：持续采集PDA指标，支持HIL动态调整
 10. **可观测性层**：OpenTelemetry集成，分布式追踪、指标采集、审计日志
 11. **状态持久化**：支持工作流状态保存与恢复（通过AES工件）
-12. **AES工件管理器**：管理AES工件的创建、版本控制、交接、哈希校验（v3新增）
-13. **工件注册表**：跟踪所有工件（AES/Markdown/Audit）的创建、引用和完整性（v3新增）
-14. **Durable Execution 引擎**：管理持久化执行模式（exit/async/sync）、确定性重放、Checkpointer 和 Saga 补偿（v4新增）
+12. **AES工件管理器**：管理AES工件的创建、版本控制、交接、哈希校验
+13. **工件注册表**：跟踪所有工件（AES/Markdown/Audit）的创建、引用和完整性
+14. **Durable Execution 引擎**：管理持久化执行模式（exit/async/sync）、确定性重放、Checkpointer 和 Saga 补偿
 
-### 4.8 Durable Execution 与一致性重放（v4新增）
+### 4.8 Durable Execution 与一致性重放
 
 #### 4.8.1 定义与定位
 
@@ -2157,10 +2008,10 @@ compensation:
 6. **Harness约束不放松**：演化不得削弱Harness的三大护栏能力
 7. **韧性能力不降低**：演化不得削弱四大韧性能力
 8. **PDA指标监控**：演化后PDA指标不得显著下降
-9. **AES工件一致性**：演化后AES工件Schema变更需向后兼容（v3新增）
-10. **断点恢复保障**：演化不得破坏断点恢复机制（v3新增）
+9. **AES工件一致性**：演化后AES工件Schema变更需向后兼容
+10. **断点恢复保障**：演化不得破坏断点恢复机制
 
-### 5.2 多Agent共建治理（v3新增）
+### 5.2 多Agent共建治理
 
 #### 5.2.1 所有权管理
 
@@ -2326,13 +2177,13 @@ monitoring:
       action_on_critical: "investigate"
 ```
 
-### 5.4 Policy-as-Code Control Plane（v4新增）
+### 5.4 Policy-as-Code Control Plane
 
 #### 5.4.1 定义与定位
 
 **Policy-as-Code Control Plane** 将治理从内嵌于业务逻辑中的规则升级为独立的、可解耦的、可验证的声明式策略引擎。其核心目标是：**授权逻辑与业务逻辑分离，策略变更无需修改代码，策略效果可测试可审计**。
 
-> **与现有治理的关系**：v3 §5.2 的多Agent共建治理（所有权管理、冲突解决、审批回执）是治理的**执行层**。Policy-as-Code 是治理的**控制平面层**，定义"谁在什么条件下可以对什么资源执行什么操作"的规则。
+> **与现有治理的关系**：多Agent共建治理（所有权管理、冲突解决、审批回执）是治理的**执行层**。Policy-as-Code 是治理的**控制平面层**，定义"谁在什么条件下可以对什么资源执行什么操作"的规则。
 
 **理论基础与外部参考**：
 
@@ -2452,15 +2303,15 @@ policy_engine:
 | **审计** | 运行时效果监控、定期审查 | 自动化 |
 | **退役** | 标记废弃、清理引用 | 结构层🟡审批 |
 
-> **治理增强原则**：Policy-as-Code 不取代 v3 §5.2 的多Agent共建治理，而是在其之上提供更精细化的授权控制。所有权管理（§5.2.1）定义"谁拥有什么"，Policy-as-Code 定义"谁能对什么做什么"。
+> **治理增强原则**：Policy-as-Code 不取代 多Agent共建治理，而是在其之上提供更精细化的授权控制。所有权管理定义"谁拥有什么"，Policy-as-Code 定义"谁能对什么做什么"。
 
-### 5.5 Eval-Driven Control Plane（v4新增）
+### 5.5 Eval-Driven Control Plane
 
 #### 5.5.1 定义与定位
 
 **Eval-Driven Control Plane** 将评估（Evaluation）从附属指标升级为控制平面的一等公民。评估结果不仅被记录和展示，还直接驱动门禁决策、配置晋升和自动回滚。
 
-> **与 PDA 的关系**：PDA 测量体系（§4.3.2）提供**部署后自治能力的持续测量**。Eval-Driven Control Plane 在 PDA 基础上增加**评估驱动的控制决策能力**，使评估结果能够触发自动化动作。
+> **与 PDA 的关系**：PDA 测量体系提供**部署后自治能力的持续测量**。Eval-Driven Control Plane 在 PDA 基础上增加**评估驱动的控制决策能力**，使评估结果能够触发自动化动作。
 
 **理论基础**：
 
@@ -2562,130 +2413,43 @@ eval_control_plane:
     → 候选版本回退到开发环境
 ```
 
-> **与硬性卡点的关系**：硬性卡点（§2.3）是面向人类的评审门禁。Eval-Driven 门禁是面向系统的自动化质量门禁。两者互补：硬性卡点确保人类意图对齐，Eval-Driven 门禁确保系统质量达标。在 HIL L5（完全自主）场景下，Eval-Driven 门禁替代部分硬性卡点的人类评审职能。
+> **与硬性卡点的关系**：硬性卡点是面向人类的评审门禁。Eval-Driven 门禁是面向系统的自动化质量门禁。两者互补：硬性卡点确保人类意图对齐，Eval-Driven 门禁确保系统质量达标。在 HIL L5（完全自主）场景下，Eval-Driven 门禁替代部分硬性卡点的人类评审职能。
 
 ---
 
-## 第六章 企业实施路线图
-
-### 6.1 分阶段实施策略
-
-#### 阶段1：基础协议与Harness层 (1-2个月)
-**目标**：建立MCP/A2A协议基础框架、全局Harness层、可观测性基础
-- **任务1.1**：MCP协议适配层开发（基于Streamable HTTP传输）
-- **任务1.2**：A2A Agent Card注册与发现机制
-- **任务1.3**：全局Harness层实现
-- **任务1.4**：OpenTelemetry集成基础
-- **任务1.5**：审计日志不可篡改机制
-- **交付物**：MCP/A2A协议适配层代码、全局Harness v1.0、可观测性基础设施
-
-#### 阶段2：意图理解与硬性卡点 (2-3个月)
-**目标**：实现"一句话需求"意图理解和三阶段硬性卡点
-- **任务2.1**：意图分类Agent开发
-- **任务2.2**：自动访谈Agent开发
-- **任务2.3**：需求分析Agent开发
-- **任务2.4**：硬性卡点管理系统（卡点1-3）
-- **任务2.5**：韧性能力与卡点映射
-- **任务2.6**：HIL控制器实现
-- **交付物**：意图理解Agent集群、硬性卡点管理系统v1.0、韧性能力映射表
-
-#### 阶段3：方案设计与多Agent编排 (3-4个月)
-**目标**：实现方案设计、工作流编排、Task/Subagent架构、博弈论协商
-- **任务3.1**：方案设计Agent开发
-- **任务3.2**：工作流编排引擎（DAG调度）
-- **任务3.3**：Task/Subagent架构实现
-- **任务3.4**：会话隔离与上下文管理
-- **任务3.5**：博弈论边界协商组件
-- **任务3.6**：动态边界涌现机制
-- **任务3.7**：选择性上下文共享实现
-- **交付物**：方案设计Agent、工作流编排引擎v1.0、Task/Subagent框架、博弈论协商组件
-
-#### 阶段4：AES载体与协作治理 (3-4个月)（v3新增阶段）
-**目标**：实现AES任务级协作载体、断点恢复、工件注册表、共建治理
-- **任务4.1**：AES工件管理器开发（创建、版本控制、交接）
-- **任务4.2**：工件注册表实现（全局追踪、哈希校验）
-- **任务4.3**：断点恢复机制实现（状态快照、最小恢复上下文）
-- **任务4.4**：审批回执系统实现（卡点审批的标准化回执）
-- **任务4.5**：所有权管理机制实现
-- **任务4.6**：冲突解决策略实现
-- **任务4.7**：AES工件→Markdown派生件自动生成
-- **交付物**：AES工件管理器v1.0、工件注册表、断点恢复系统v1.0、协作治理机制
-
-#### 阶段5：自主执行与质量验证 (4-6个月)
-**目标**：实现多Agent自主执行、Agent-to-Agent审查、质量验证、PDA测量
-- **任务5.1**：执行Agent集群（编码/文档/配置/打包）
-- **任务5.2**：Agent-to-Agent审查机制
-- **任务5.3**：质量验证Agent
-- **任务5.4**：交付物打包Agent
-- **任务5.5**：PDA测量体系实现
-- **任务5.6**：DACES状态管理器开发
-- **交付物**：执行Agent集群v1.0、A2A审查系统、PDA仪表板
-
-#### 阶段6：闭环优化与规模化 (6-8个月)
-**目标**：建立闭环优化系统，实现生产级规模化部署
-- **任务6.1**：闭环优化系统
-- **任务6.2**：受控演化管理系统
-- **任务6.3**：边界熵实时监控
-- **任务6.4**：韧性能力持续评估
-- **任务6.5**：规模化部署架构设计
-- **任务6.6**：系统集成测试与性能调优
-- **交付物**：闭环优化系统v1.0、受控演化管理系统、生产级部署架构
-
-### 6.2 关键里程碑
-
-| 里程碑 | 时间 | 完成标准 | 验证方法 |
-|--------|------|----------|----------|
-| M1: MCP/A2A协议适配完成 | Month 2 | 所有现有技能通过MCP协议正常运行，A2A发现机制可用 | 自动化测试套件通过率100% |
-| M2: 全局Harness上线 | Month 2 | Harness三大护栏（意图/执行/质量）全部生效 | 安全测试套件通过率100% |
-| M3: 可观测性基础就绪 | Month 2 | OpenTelemetry集成可用，审计日志可追溯 | 分布式追踪测试通过 |
-| M4: "一句话需求"意图理解可用 | Month 4 | 10个典型场景的需求理解准确率>85% | 人工评审测试 |
-| M5: 硬性卡点系统上线 | Month 4 | 三个硬性卡点正确触发，不可绕过 | 绕行行为检测准确率>99% |
-| M6: 韧性能力映射完成 | Month 4 | 四大韧性能力与卡点映射完整 | 映射表评审通过 |
-| M7: Task/Subagent架构运行 | Month 5 | Subagent会话隔离正常，上下文节省>70% | 上下文使用率测试 |
-| M8: 多Agent编排系统运行 | Month 6 | 5个Agent可并行协作完成中等复杂度任务 | 端到端集成测试 |
-| M9: **AES工件管理器上线**（v3新增） | Month 7 | AES工件可创建、交接、恢复，哈希校验通过 | AES工件生命周期测试 |
-| M10: **断点恢复系统可用**（v3新增） | Month 7 | 可从任意节点中断点恢复，恢复成功率>95% | 断点恢复场景测试 |
-| M11: PDA测量体系运行 | Month 8 | 4大类16个指标实时采集和可视化 | PDA仪表板验证 |
-| M12: 质量验证系统可用 | Month 8 | 自动化测试覆盖交付物全类型 | 质量验证准确率>90% |
-| M13: **协作治理机制运行**（v3新增） | Month 8 | 所有权转移、审批回执、冲突解决均可用 | 多Agent共建场景测试 |
-| M14: 闭环优化系统运行 | Month 10 | 从数据收集到架构调整的完整闭环 | 自动识别并优化至少3个系统瓶颈 |
-| M15: 生产环境部署 | Month 12 | 系统在生产环境稳定运行30天 | 系统可用性>99.9%，PDA评分持续提升 |
-
 ---
 
-## 第七章 研究空白与未来方向
+## 第六章 研究空白与未来方向
 
-### 7.1 理论空白
+### 6.1 理论空白
 
 1. **相变阈值的统计校准**：现有阈值基于经验假设，缺乏大规模实证验证
     - **研究方向**：收集行业数据，建立基于统计的相变阈值模型
-    - **关联文献**：文献1.7、3.2.1、theory_whitepaper_v2.2附录F
+    - **关联文献**：相关理论文献
 
 2. **HIL分级的企业适用性**：不同行业、文化背景下的分级标准差异化研究
     - **研究方向**：金融、医疗、政务等特定行业的HIL分级标准
-    - **关联文献**：文献2.4、theory_whitepaper_v2.2附录E
+    - **关联文献**：相关理论文献
 
 3. **韧性工程与AI系统的深度融合**：Safety-II范式在多Agent系统中的应用验证
     - **研究方向**：成功模式学习、韧性增强、自适应阈值
-    - **关联文献**：文献2.7.9
 
 4. **Task/Subagent执行模式优化**：会话隔离粒度、上下文摘要算法、并行冲突解决
     - **研究方向**：最优会话隔离策略、智能上下文压缩
-    - **关联文献**：文献3.2.6
 
 5. **PDA指标权重动态调整**：不同场景下PDA指标权重的最优配置
     - **研究方向**：基于场景的权重自适应调整算法
-    - **关联文献**：theory_whitepaper_v2.2 §8A.1.3
+    - **关联文献**：动态适应与协同演化系统理论 
 
-6. **AES工件Schema的标准化演进**（v3新增识别）：当前AES为内部规范，如何向行业标准方向演进
+6. **AES工件Schema的标准化演进**：当前AES为技术规范，如何向行业标准方向演进
     - **研究方向**：AES Schema版本管理、向后兼容策略、跨组织AES互操作
-    - **关联文献**：AES README、AES_Planning_Document_Writing_Guide.aes.yaml
+    - **关联文献**：AES 规范文档
 
-7. **Durable Execution 在多Agent场景下的理论建模**（v4新增识别）：持久化执行、确定性重放、补偿模式在分布式多Agent环境中的理论保证
+7. **Durable Execution 在多Agent场景下的理论建模**：持久化执行、确定性重放、补偿模式在分布式多Agent环境中的理论保证
     - **研究方向**：形式化验证 Durable Execution 的正确性和一致性
-    - **关联文献**：LangGraph Durable Execution, Temporal, 3.9.4 前沿增强工作包
+    - **关联文献**：LangGraph Durable Execution, Temporal
 
-### 7.2 技术空白
+### 6.2 技术空白
 
 1. **MCP协议的性能基准**：不同实现方案的性能对比与优化指南
 
@@ -2697,15 +2461,15 @@ eval_control_plane:
 
 5. **可观测性开销优化**：在保证可追踪性的前提下最小化性能影响
 
-6. **AES工件的增量更新与差异同步**（v3新增识别）：大任务中AES工件的增量更新机制
+6. **AES工件的增量更新与差异同步**：大任务中AES工件的增量更新机制
 
-7. **跨模型断点恢复的上下文适配**（v3新增识别）：从模型A中断，由模型B恢复时的上下文适配问题
+7. **跨模型断点恢复的上下文适配**：从模型A中断，由模型B恢复时的上下文适配问题
 
-8. **Policy-as-Code 在动态边界场景下的策略冲突检测**（v4新增识别）：博弈论动态边界与声明式策略的交互
+8. **Policy-as-Code 在动态边界场景下的策略冲突检测**：博弈论动态边界与声明式策略的交互
 
-9. **Eval-Driven Control Plane 的评估指标完备性**（v4新增识别）：多维度评估指标的最小完备集
+9. **Eval-Driven Control Plane 的评估指标完备性**：多维度评估指标的最小完备集
 
-### 7.3 工程空白
+### 6.3 工程空白
 
 1. **企业迁移方法论**：从传统系统到多Agent系统的渐进式迁移路径
 
@@ -2715,20 +2479,20 @@ eval_control_plane:
 
 4. **技能生命周期管理**：技能的版本控制、依赖管理、退役流程
 
-5. **AES工件生命周期管理**（v3新增识别）：从创建到归档的完整生命周期策略
+5. **AES工件生命周期管理**：从创建到归档的完整生命周期策略
 
-### 7.4 AES 标准化演进与跨组织互操作路线（v4新增）
+### 6.4 AES 标准化演进与跨组织互操作路线
 
-#### 7.4.1 演进阶段
+#### 6.4.1 演进阶段
 
 | 阶段 | 名称 | 时间范围 | 目标 |
 |------|------|---------|------|
-| **Phase 1** | 内部规范化 | v3-v4（已完成） | 内部 AES v2.0 Schema 定义，团队内统一使用 |
-| **Phase 2** | Schema Registry | v5（规划中） | 建立 AES Schema 注册表，支持版本管理和向后兼容 |
-| **Phase 3** | Delta Sync | v5-v6（未来方向） | AES 工件增量更新与差异同步机制 |
-| **Phase 4** | Cross-org Interop | v6+（远期方向） | 跨组织 AES 互操作 Profile |
+| **阶段 1** | 规范统一化 | （已完成） | AES Schema 定义，团队内统一使用 |
+| **阶段 2** | Schema Registry | （规划中） | 建立 AES Schema 注册表，支持版本管理和向后兼容 |
+| **阶段 3** | Delta Sync | （未来方向） | AES 工件增量更新与差异同步机制 |
+| **阶段 4** | Cross-org Interop | （远期方向） | 跨组织 AES 互操作 Profile |
 
-#### 7.4.2 Schema Registry 设计
+#### 6.4.2 Schema Registry 设计
 
 ```yaml
 aes_schema_registry:
@@ -2753,7 +2517,7 @@ aes_schema_registry:
     on_migrate: "run_migration_guide"
 ```
 
-#### 7.4.3 Delta Sync 机制
+#### 6.4.3 Delta Sync 机制
 
 对于大型任务中 AES 工件频繁更新的场景，引入增量同步（Delta Sync）机制：
 
@@ -2777,7 +2541,7 @@ delta_sync:
     hash_verification: "sha256_per_patch"
 ```
 
-#### 7.4.4 Cross-org Profile
+#### 6.4.4 Cross-org Profile
 
 跨组织 AES 互操作需要定义标准化的互操作 Profile：
 
@@ -2807,17 +2571,17 @@ cross_org_profile:
       mandatory: true
 ```
 
-> **说明**：Phase 1（内部规范化）已通过 v3 和 v4 完成。Phase 2-4 为未来方向，将在后续版本中逐步实现。本路线图为企业级多Agent系统的跨组织协作提供清晰的标准化演进路径。
+> **说明**：阶段 1（规范统一化）已完成。阶段 2-4 为未来方向，将在后续版本中逐步实现。本路线图为企业级多Agent系统的跨组织协作提供清晰的标准化演进路径。
 
 ---
 
-## 第八章 结论与建议
+## 第七章 结论与建议
 
-### 8.1 主要结论
+### 7.1 主要结论
 
 1. **范式创新性**：本文定义的"一句话需求"范式，结合Harness Engineering和三阶段硬性卡点机制，为从用户意图到最终成果的端到端自主执行提供了可行路径。
 
-2. **理论系统性**：框架整合了DACES、HWAT、AEAS、PDA、博弈论边界协商、上下文隔离、韧性工程等多领域理论，与 theory_whitepaper_v2.2 保持严格一致。
+2. **理论系统性**：框架整合了DACES、HWAT、AEAS、PDA、博弈论边界协商、上下文隔离、韧性工程等多领域理论，与 动态适应与协同演化系统理论 保持严格一致。
 
 3. **架构创新性**：新增 Task/Subagent 架构、可观测性架构、PDA测量体系、韧性工程整合、AES任务级协作载体，形成了完整的工程实现路径。
 
@@ -2833,7 +2597,7 @@ cross_org_profile:
 10. **观测生态兼容**：通过 OTel GenAI SemConv 对齐，可观测性架构具备行业标准兼容性
 11. **AES 标准化路线**：通过 Schema Registry / Delta Sync / Cross-org Profile 路线图，AES 向跨组织标准化演进
 
-### 8.2 实施建议
+### 7.2 实施建议
 
 #### 立即行动建议
 1. **成立专项工作组**：组建跨职能团队，负责框架实施和标准制定
@@ -2848,7 +2612,7 @@ cross_org_profile:
 3. **深化产学研合作**：推动DACES、HWAT、韧性工程理论的实证研究
 4. **拓展应用领域**：从软件开发扩展到更多企业工作流场景
 
-### 8.3 展望
+### 7.3 展望
 
 随着理论体系的不断完善和工程实践的持续积累，基于动态适应与协同演化理论的多Agent系统工程应用框架有望成为企业智能化转型的核心方法论。
 
@@ -2860,121 +2624,24 @@ cross_org_profile:
 
 ## 参考文献
 
-### 核心理论文献
-1. **theory_whitepaper_v2.2.md** — 动态适应与协同演化系统理论白皮书 v2.2（DACES/HWAT/AEAS/PDA完整体系）
-2. **3.8_多Agent系统在企业工作流中的标准化架构与治理框架报告.md** v2.0 — 分层标准化理论与受控演化机制
-3. **future_architecture_vision.md** — OpenCode 2.0多智能体系统架构设计愿景
-4. **phase0_agent_standardization.md** — Agent标准化架构工程落地定义
+### 核心理论与框架
+1. **动态适应与协同演化系统理论（DACES）** — 动态适应、HWAT 人机协作分级、AEAS 四核六层架构、PDA 测量体系完整理论框架
+2. **Harness Engineering** — OpenAI 提出的"人类掌舵，Agent 执行"工程方法论（2026）
+3. **分层标准化架构理论** — 核心层/结构层/实现层三层标准化工程框架
+4. **韧性工程理论** — 响应、监控、学习、预期四大韧性能力框架
 
-### Harness Engineering文献
-5. **1.2_Prompt-to-Harness-Engineering.md** — 从Prompt Engineering到Harness Engineering四阶段演进
-6. **1.3_Harness-Multi-Agent-System.md** — Harness在多Agent系统中的理论原理
-7. **2.7.1_Harness-Engineering-Leveraging-Codex-In-An-Agent-First-World.md** — OpenAI Harness工程实践
+### 协议与标准
+5. **Model Context Protocol (MCP) Specification** — MCP 协议标准规范（Anthropic，已捐赠 Linux Foundation AAIF）
+6. **Agent-to-Agent Protocol (A2A) Specification v0.3.0** — A2A 协议标准规范（Google，已转入 Linux Foundation）
+7. **OpenTelemetry Specification** — OpenTelemetry 分布式追踪标准
+8. **OpenTelemetry GenAI Semantic Conventions** — GenAI/Agent 可观测性语义规范
 
-### Task/Subagent架构文献
-8. **3.2.6_Programming_Agent_Task_Tool_and_Subagent_Architecture_In-Depth_Research_Report.md** — Task/Subagent架构深度研究报告
+### 行业报告与生态
+9. **Google Developers Blog: "A2A, a new era of agent interoperability"** — A2A 协议官方发布（https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/）
+10. **Linux Foundation: "Launches the Agent2Agent Protocol Project"** — A2A 转入 Linux Foundation 项目化（https://www.linuxfoundation.org/press/）
 
-### 韧性工程文献
-9. **2.7.9_Resilience-Engineering-Research-Report.md** — 韧性工程调研分析报告（2026版）
-
-### 可观测性文献
-10. **2.7.21_Opentelemetry-Tracing.md** — OpenTelemetry分布式追踪
-
-### 多Agent协作与边界理论文献
-11. **1.6_Multi-Agent-Collaboration-Ecosystem.md** — 多Agent协作生态（2026版）
-12. **1.7_Single-Agent-Multi-Skill-Boundary.md** — 单Agent多Skill与多Agent相变界限
-13. **1.9_Multi-Agent-Context-Isolation.md** — 多Agent上下文隔离与选择性共享
-14. **3.2.1_Agent-Skill-Script-Boundary-Phase-Transition.md** — Agent-Skill-Script三层相变统一理论
-15. **3.2.4_Game-Theory-Perspective-Multi-Agent-Fuzzy-Boundary-Problem.md** — 博弈论视角下的多Agent模糊边界问题
-16. **3.2.5_Dynamic-Boundary-Emergence-Based-On-Game-Theory-And-Harness-Engineering.md** — 动态边界涌现
-
-### MCP协议文献
-17. **1.10_MCP-Protocol-Analysis.md** — MCP协议深度调研（2026版）
-18. **2.7.25_What-Is-The-Model-Context-Protocol-Mcp.md** — MCP官方定义
-19. **2.7.28_Mcp-Transport-Mechanism-Research-Report.md** — MCP传输机制
-
-### A2A协议文献
-20. **2.7.18_A2A-Agent-To-Agent-Protocol.md** — A2A协议调研（2026版）
-21. **2.7.29_Announcing-The-Agent2Agent-Protocol-A2A.md** — A2A官方发布文
-
-### AES任务级协作载体文献（v3新增）
-22. **AES_Planning_Document_Writing_Guide.aes.yaml** — AES规范写作指南（三层结构：AES Core + Implementation Instructions + Plan & Artifacts）
-23. **AES README (GitHub specs)** — AES广义定位：多Agent协作中的任务连续性与断点恢复规范
-
-### 工作流与企业实践文献
-24. **2.4_Human-Workflow-Replacement-Theory.md** — HWAT人类工作流替代理论
-25. **2.4.1_Enterprise-Workflow-Abstract-Model.md** — 企业工作流抽象模型
-26. **2.4.3_Workflow-Model-Evolution-Matching.md** — 工作流演进与DACES匹配分析
-27. **2.6_Agent-System-Software-Development.md** — Agent系统重构软件开发工作流
-28. **1.1_Claude-Skills-Architecture.md** — Claude Skills架构
-29. **1.11_Agent-Skill-Registry.md** — Skill注册表机制与能力发现
-
-### 审查报告（v3新增）
-30. **3.9.3_3.9.1-v2_AES-A2A-Collaboration-Review-and-Revision-Plan.aes.yaml** — AES/A2A融合审查报告与修订规划
-
-### 前沿增强报告（v4新增）
-31. **3.9.4_3.9.1-v3_Frontier-Enhancement-Plan.aes.yaml** — v3 前沿增强工作包
-
-### 外部标准与行业报告
-31. **Model Context Protocol Specification v2025-06-18** — MCP协议标准规范（Anthropic/Linux Foundation AAIF）
-32. **Agent-to-Agent Protocol (A2A) Specification v0.3.0** — A2A协议标准规范（Google/Linux Foundation）
-33. **OpenTelemetry Specification** — OpenTelemetry分布式追踪标准
-34. **Google Developers Blog: "A2A, a new era of agent interoperability"** — A2A初始官方定位（来源：https://developers.googleblog.com/en/a2a-a-new-era-of-agent-interoperability/）
-35. **Linux Foundation: "launches the Agent2Agent Protocol Project"** — A2A转入Linux Foundation（来源：https://www.linuxfoundation.org/press/）
-
-### 前沿增强参考源（v4新增）
-36. **LangGraph Durable Execution** — 持久化执行、确定性重放、durability modes（来源：https://docs.langchain.com/oss/javascript/langgraph/durable-execution）
-37. **Temporal Durable Execution Platform** — 持久化工作流、Compensation/Saga、pause/resume（来源：https://temporal.io/）
-38. **Cedar Policy Language** — 声明式授权策略语言（来源：https://docs.cedarpolicy.com/）
-39. **OpenTelemetry Semantic Conventions for Generative AI Systems** — GenAI/Agent/MCP 观测语义规范 v1.40.0（Status: Development）（来源：https://opentelemetry.io/docs/specs/semconv/gen-ai/）
-40. **OpenTelemetry Generative AI Events** — gen_ai.evaluation.result 评估事件规范（来源：https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-events/）
-
+### 相关技术规范
+11. **AES（Agent Engagement Specification）任务级协作载体规范** — 多 Agent 协作中的任务状态、断点恢复、跨 Agent 交接规范
 ---
 
-## 文档版本控制
-
-| 版本 | 日期 | 作者 | 变更说明 |
-|------|------|------|----------|
-| 1.0 | 2026-03-27 | 系统架构研究团队 | 初始版本 |
-| 1.1 | 2026-03-27 | 系统架构研究团队 | 修正格式，补充参考文献 |
-| 2.0 | 2026-03-27 | 系统架构研究团队 | **基于3.9.2修订计划v2.0的重大修订**：<br>• Week1：理论一致性对齐（DACES相变阈值、HIL-5判定量表引用、AEAS四核六层映射）<br>• Week2：Task/Subagent架构整合（§4.2.5）、会话隔离机制、执行模式设计、长期记忆管理、A2A/MCP安全机制<br>• Week3：韧性工程整合（§3.2.6）、可观测性架构（§4.5）、PDA测量体系（§4.3.2）、协议风险管理<br>• Week4：文档整合、术语统一、参考文献更新 |
-| 3.0 | 2026-03-27 | 系统架构研究团队 | **基于3.9.3 AES/A2A融合审查报告的重大修订**：<br>• 理论定位补足：新增§3.3.4 AES任务级协作载体定义，明确AES/A2A/MCP三者边界（F-01）<br>• 证据边界清理：删除/降级未经核验的2026生态规模数据，区分三级证据（F-03）<br>• 节点模型重写：§4.7.1 工作流节点五元组 Task+AES+Actor+Checkpoint+Artifact（F-02）<br>• 交付物体系升级：卡点主工件改为AES，Markdown作为派生件（F-04）<br>• 协作治理补足：§5.2 所有权管理、冲突解决、审批回执、工件注册表（F-05）<br>• 新增§4.7.3 断点恢复机制<br>• 新增阶段4（AES载体与协作治理）<br>• 新增M9/M10/M13三个里程碑<br>• 参考文献更新至35篇 |
-| 4.0 | 2026-03-28 | 系统架构研究团队 | **基于3.9.4前沿增强工作包的重大增强**：<br>• 新增§4.8 Durable Execution与一致性重放（P0）<br>• 新增§5.4 Policy-as-Code Control Plane（P0）<br>• 新增§5.5 Eval-Driven Control Plane（P1）<br>• §4.5新增OTel GenAI SemConv对齐子节（P1）<br>• 新增§7.4 AES标准化演进与跨组织互操作路线图（P1）<br>• 参考文献更新至40篇 |
-
-## 文档状态
-
-**状态**: 已完成前沿增强修订
-
-**修订依据**: 3.9.4_3.9.1-v3_Frontier-Enhancement-Plan.aes.yaml
-
-**理论一致性验证**:
-- DACES双态演化模型：✅ 与 theory_whitepaper_v2.2 §3 一致
-- HIL-5分级框架：✅ 与 theory_whitepaper_v2.2 §4 一致，新增附录E引用
-- 架构相变阈值：✅ 与 theory_whitepaper_v2.2 §5 一致，标注为"经验假设-待校准"
-- AEAS四核六层架构：✅ 与 theory_whitepaper_v2.2 §8 一致
-- PDA测量体系：✅ 与 theory_whitepaper_v2.2 §8A.1 一致
-- 工作流原子模型：✅ 与 theory_whitepaper_v2.2 §6.2 一致（AES映射）
-- 协议与控制平面：✅ 与 theory_whitepaper_v2.2 §8A.2 一致（三层平面）
-
-**Finding解决状态**:
-- F-01（缺少任务级协作载体）：✅ 已解决 — 新增§3.3.4 AES定义
-- F-02（工作流节点模型不完整）：✅ 已解决 — 新增§4.7.1 五元组模型
-- F-03（生态规模数据超证据边界）：✅ 已解决 — 区分三级证据
-- F-04（交付物未体现AES权威地位）：✅ 已解决 — 三类交付物层级
-- F-05（多Agent共建治理未具体化）：✅ 已解决 — §5.2 治理机制
-
-**GAP解决状态（继承v2）**:
-- GAP-1至GAP-5（理论一致性）：✅ 已解决
-- GAP-6至GAP-9（架构设计）：✅ 已解决
-- GAP-10至GAP-12（协议安全）：✅ 已解决
-
-**VF Finding 解决状态（v4新增）**:
-- VF-01（Durable Execution 上升为独立运行时语义）：✅ 已解决 — 新增§4.8
-- VF-02（Policy-as-Code 成为独立控制平面）：✅ 已解决 — 新增§5.4
-- VF-03（Eval 成为一等控制平面对象）：✅ 已解决 — 新增§5.5
-- VF-04（OTel 观测指标对齐 GenAI semconv）：✅ 已解决 — 新增§4.5.3
-- VF-05（AES 互操作形成结构化路线图）：✅ 已解决 — 新增§7.4
-
----
-
-*文档前沿增强修订完成 | 2026年3月28日*
+*文档版本 v1.0 | 2026年3月28日*
