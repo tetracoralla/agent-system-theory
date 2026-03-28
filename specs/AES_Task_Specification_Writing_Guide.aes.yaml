@@ -1,13 +1,13 @@
-# AES (Agent-Executable Specification) v3.0
+# AES (Agent-Executable Specification) v3.3
 # File: AES_Task_Specification_Writing_Guide.aes.yaml
 # Purpose: 定义 AES 作为工作流节点执行包规范，支持 Agent 高效执行、防止偏离、
-#          多 Agent 协作、任务连续性和企业工作流编排
+#          多 Agent 协作、任务连续性、企业工作流编排和变更管理
 
 # ========== 1. Metadata (REQUIRED) ==========
 meta:
   task_id: "task_20260328_aes_guide_v3"
-  task_name: "AES 工作流节点执行包写作指南 v3.0"
-  version: "3.0.0"
+task_name: "AES 工作流节点执行包写作指南 v3.3"
+  version: "3.3.0"
   created_at: "2026-03-28T00:00:00Z"
   updated_at: "2026-03-28T12:00:00Z"
   from_agent: "chief_architect"
@@ -17,7 +17,7 @@ meta:
   document_type: "reference_guide"
   target_agents: ["product_manager_agent", "project_manager_agent", "technical_lead_agent", "workflow_orchestrator"]
   aes_profile: "planning"
-  schema_version: "3.0.0"
+  schema_version: "3.3.0"
 
 # ========== 2. Status (REQUIRED) ==========
 status:
@@ -60,7 +60,7 @@ background:
     4. 防偏离机制（safeguards）
     导致 Agent 执行时需要额外找文档、容易偏离、难以拦截。
   context_summary: |
-    AES v3.0 定位为"工作流节点执行包"，每个 AES 是一个完整的工作流节点，
+    AES v3.3 定位为"工作流节点执行包"，每个 AES 是一个完整的工作流节点，
     由管理层 Agent（产品经理、项目经理等）撰写，分发给执行层 Agent 执行。
     核心原则：自包含、最小提示词、防止偏离。
 
@@ -86,14 +86,14 @@ references:
 artifacts:
   files_created:
     - path: "AES_Task_Specification_Writing_Guide.aes.yaml"
-      description: "本文档，AES v3.0 写作指南"
+      description: "本文档，AES v3.3 写作指南"
       status: "completed"
   files_modified: []
   decisions_made: []
 
 # ========== 7. Guide Content ==========
 guide_content: |
-  ========== AES v3.0 工作流节点执行包写作指南 ==========
+  ========== AES v3.3 工作流节点执行包写作指南 ==========
   
   ## 第一章：核心概念
   
@@ -171,7 +171,7 @@ guide_content: |
   ### 2.1 完整结构概览
   
   ```yaml
-  # AES v3.0 工作流节点执行包结构
+  # AES v3.3 工作流节点执行包结构
   
   # === 身份与边界 ===
   identity:                    # 节点身份定义
@@ -186,6 +186,12 @@ guide_content: |
     required_artifacts: [...]  # 必需的输入工件
     required_context: [...]    # 必需的上下文
     forbidden_assumptions: [...] # 禁止的假设
+    knowledge_context:         # 背景知识上下文（v3.3新增）
+      terminology: [...]       # 术语/缩写解释
+      internal_lingo: [...]    # 内部行话/黑话
+      background_links: [...]  # 相关背景链接
+      similar_tasks: [...]     # 历史类似任务
+      domain_nuances: [...]    # 领域特异性知识
   
   # === 输出契约（必须产出的内容）===
   output_contract:
@@ -210,29 +216,88 @@ guide_content: |
     approvers: [...]
     auto_approve_if: [...]
   
-  # === 风险预防（运行时拦截）===
-  safeguards:
-    deviation_detection: [...] # 偏离检测规则
-    fallback: [...]            # 降级方案
-  ```
+   # === 风险预防（运行时拦截）===
+   safeguards:
+     deviation_detection: [...] # 偏离检测规则
+     fallback: [...]            # 降级方案
+   
+# === 变更管理（工作流链一致性）===
+    change_management:
+      propagation_mode: "..."    # 变更传播策略
+      version_compatibility: "..." # 版本兼容性
+      rollback_strategy: "..."   # 回滚策略
+
+   # === 执行报告（execution_report Profile 必需字段）===
+   execution_summary:
+     executing_agent: string        # 执行 Agent 标识
+     execution_start: timestamp     # 执行开始时间
+     execution_end: timestamp       # 执行结束时间
+     actual_effort: string          # 实际工作量
+     tasks_completed: list          # 已完成任务列表
+     tasks_skipped: list            # 跳过任务列表（含原因）
+
+   execution_metrics:
+     duration: string               # 实际执行时长
+     tokens_used: integer           # Token 消耗（可选）
+     files_created: integer         # 创建文件数
+     files_modified: integer        # 修改文件数
+     test_coverage: integer         # 测试覆盖率（可选）
+
+   output_artifacts:
+     - path: string                 # 工件路径
+       description: string          # 工件描述
+       status: string               # completed | partial | failed
+       hash: string                 # 哈希校验（可选）
+
+quality_verification:
+      - criteria: string             # 验证标准
+        status: string               # passed | failed | skipped
+        evidence: string             # 验证证据（可选）
+
+    # === 知识捕获（execution_report Profile 可选字段，v3.3新增）===
+    knowledge_capture:
+      discoveries:                   # 任务中发现的知识
+        - type: string               # terminology | pattern | solution | nuance
+          content: string            # 知识内容
+          context: string            # 发现上下文
+          confidence: float          # 置信度 0.0-1.0
+          reusable: boolean          # 是否可复用
+      suggestions:                   # 知识库改进建议
+        - area: string               # 改进领域
+          suggestion: string         # 具体建议
+          priority: string           # high | medium | low
+    ```
   
   ### 2.2 各字段详解
   
   #### 2.2.1 identity（身份与边界）
   
-  ```yaml
-  identity:
-    node_id: "aes-004-ui-design"           # 节点唯一标识
-    node_name: "UI 设计"                    # 节点名称
-    executor: "designer_agent"              # 执行者 Agent ID
-    parent_node: "aes-003-project-planning" # 父节点（工作流上下游）
-    expected_duration: "2h"                 # 预计执行时长
-  ```
+   ```yaml
+   identity:
+     node_id: "aes-004-ui-design"           # 节点唯一标识
+     node_name: "UI 设计"                    # 节点名称
+     executor: "designer_agent"              # 执行者 Agent ID
+     parent_node: "aes-003-project-planning" # 父节点（工作流上游）
+     child_nodes: ["aes-007-integration-test"] # 子节点（工作流下游）
+     workflow_chain_id: "workflow-ecommerce-001" # 所属工作流链标识
+     expected_duration: "2h"                 # 预计执行时长
+   ```
   
-  **规则**：
-  - `node_id` 格式：`aes-{sequence}-{short-name}`
-  - `executor` 必须是系统中已注册的 Agent
-  - `parent_node` 用于追溯工作流来源
+**规则**：
+    - `node_id` 格式：`aes-{sequence}-{short-name}`
+    - `executor` 必须是系统中已注册的 Agent
+    - `parent_node` 用于追溯工作流上游来源
+    - `child_nodes` 用于声明工作流下游节点（可选，管理层Agent填写）
+    - `workflow_chain_id` 用于标识所属工作流链，支持变更传播分析
+
+  **meta.aes_profile 说明**（见 §3.1）：
+  ```yaml
+  meta:
+    aes_profile: "planning"  # planning | handoff | execution_report
+    # planning: 初始规划阶段（定义任务）
+    # handoff: 交接/恢复阶段（状态快照）
+    # execution_report: 执行完成阶段（终态，填写执行报告）
+  ```
   
   #### 2.2.2 input_contract（输入契约）
   
@@ -256,11 +321,109 @@ guide_content: |
       - "不要假设设计风格已确定"
       - "不要假设用户已明确所有需求"
       - "不要跳过设计规范检查"
+    
+    knowledge_context:
+      terminology:
+        - term: "SKU"
+          definition: "Stock Keeping Unit，库存单位"
+        - term: "GMV"
+          definition: "Gross Merchandise Volume，商品交易总额"
+      
+      internal_lingo:
+        - phrase: "跑批"
+          meaning: "批量数据处理任务"
+        - phrase: "灰度"
+          meaning: "渐进式发布策略"
+      
+      background_links:
+        - title: "Q4业务规划"
+          url: "wiki/business/q4-planning"
+        - title: "技术架构文档"
+          url: "confluence/arch/overview"
+      
+      similar_tasks:
+        - task_id: "aes-002-similar-project"
+          similarity: "相同业务领域"
+          lessons: "用户偏好简洁的界面设计"
+      
+      domain_nuances:
+        - area: "促销活动"
+          nuance: "秒杀场景需考虑库存并发扣减"
+        - area: "用户权限"
+          nuance: "企业客户有额外的审批流程"
   ```
   
   **关键作用**：
   1. Agent 启动前验证所有输入是否就绪
   2. 明确告诉 Agent "不要假设什么"，防止过度发挥
+  3. 提供背景知识，帮助 Agent 理解企业特定语境（v3.3新增）
+
+  #### 2.2.3 knowledge_context（背景知识上下文）【v3.3新增】
+
+  **定义任务执行所需的背景知识，实现隐性知识的显性传递**。
+
+  ```yaml
+  knowledge_context:
+    terminology:                    # 术语/缩写解释
+      - term: "SKU"
+        definition: "Stock Keeping Unit，库存单位"
+        category: "business"        # business | technical | domain
+      - term: "PR"
+        definition: "Pull Request，代码合并请求"
+        category: "technical"
+    
+    internal_lingo:                 # 内部行话/黑话
+      - phrase: "跑批"
+        meaning: "批量数据处理任务"
+        context: "通常指夜间执行的ETL任务"
+      - phrase: "灰度"
+        meaning: "渐进式发布策略"
+        context: "先开放给部分用户测试"
+    
+    background_links:               # 相关背景链接
+      - title: "Q4业务规划"
+        url: "wiki/business/q4-planning"
+        relevance: "理解当前项目优先级"
+      - title: "技术架构文档"
+        url: "confluence/arch/overview"
+        relevance: "理解系统架构约束"
+    
+    similar_tasks:                  # 历史类似任务
+      - task_id: "aes-002-similar-project"
+        similarity: "相同业务领域"
+        lessons: "用户偏好简洁的界面设计"
+        reusable_solutions: ["组件库复用", "API设计模式"]
+    
+    domain_nuances:                 # 领域特异性知识
+      - area: "促销活动"
+        nuance: "秒杀场景需考虑库存并发扣减"
+        implication: "需要分布式锁机制"
+      - area: "用户权限"
+        nuance: "企业客户有额外的审批流程"
+        implication: "权限模型需支持多级审批"
+  ```
+
+  **设计理念**（基于隐性知识显性化理论）：
+  1. **术语标准化**：确保Agent理解企业特定术语，避免误解
+  2. **行话解释**：传递企业内部沟通习惯，提高协作效率
+  3. **背景链接**：提供知识来源，支持Agent深入理解
+  4. **经验复用**：利用历史任务经验，避免重复犯错
+  5. **领域敏感性**：传递领域特有约束和注意事项
+
+  **与企业知识管理的映射**：
+  | knowledge_context 字段 | 知识管理理论 | 企业实践案例 |
+  |------------------------|--------------|--------------|
+  | terminology | 术语标准化 | IBM术语库、Siemens知识图谱 |
+  | internal_lingo | 组织语言 | Toyota生产系统术语、GE文化语言 |
+  | background_links | 知识链接 | 知识图谱关联、Wiki链接 |
+  | similar_tasks | 经验复用 | 案例库、最佳实践库 |
+  | domain_nuances | 隐性知识显性化 | SECI模型外显化阶段 |
+
+  **使用场景**：
+  1. 新Agent加入项目时，快速理解企业语境
+  2. 跨部门协作时，消除术语歧义
+  3. 任务交接时，保留背景知识
+  4. 知识积累时，持续补充更新
   
   #### 2.2.3 output_contract（输出契约）
   
@@ -428,12 +591,39 @@ guide_content: |
         message: "超过最大重试次数，已升级到人工处理"
   ```
   
-  **关键作用**：
-  1. 定义触发条件（trigger）和拦截动作（action）
-  2. 运行时监控 Agent 行为
-  3. 发现偏离时主动拦截并提醒
-  
-  ---
+   **关键作用**：
+   1. 定义触发条件（trigger）和拦截动作（action）
+   2. 运行时监控 Agent 行为
+   3. 发现偏离时主动拦截并提醒
+
+   #### 2.2.8 change_management（变更管理）
+
+   **定义需求变更时的传播策略和工作流链一致性保障**。
+
+   ```yaml
+   change_management:
+     propagation_mode: "cascade"  # none/cascade/parallel/stop
+     version_compatibility: "backward_compatible"
+     rollback_strategy: "revert_to_checkpoint"
+     notification_targets:
+       - "executor"              # 通知当前节点执行者
+       - "child_nodes"           # 通知所有下游节点
+       - "workflow_orchestrator" # 通知工作流编排器
+   
+   # 四种传播策略：
+   # 1. none: 仅修订当前节点，下游不变（适用于澄清类变更）
+   # 2. cascade: 串行下游，等待当前节点完成后修订（适用于架构调整）
+   # 3. parallel: 并行下游，标记待修订（适用于业务逻辑变更）
+   # 4. stop: 暂停整个工作流分支（适用于重大需求变更）
+   ```
+
+   **使用场景**：
+   - 管理层Agent修订AES后，系统自动分析影响范围
+   - 根据propagation_mode决定变更传播策略
+   - 通过workflow_chain_id追踪同一工作流链的所有节点
+   - 执行层Agent可通过node_registry查询上下游节点状态
+
+   ---
   
   ## 第三章：AES Profile 机制
   
@@ -443,7 +633,7 @@ guide_content: |
   |---------|------|------|----------|
   | planning | 任务规划期 | 定义任务、约束、输入输出 | identity, input_contract, output_contract, execution_constraints, execution_prompt |
   | handoff | 任务交接期 | 状态快照、恢复上下文 | + state_snapshot, handoff_contract |
-  | execution_report | 任务完成期 | 执行结果、审计追溯 | + checkpoint_receipts, artifact_registry |
+  | execution_report | 任务完成期 | 执行结果、审计追溯 | + execution_summary, execution_metrics, output_artifacts, quality_verification |
   
   ### 3.2 Profile 演进
   
@@ -493,29 +683,218 @@ guide_content: |
   ```
   
   ### 3.4 Execution Report Profile 新增字段
-  
-  ```yaml
-  checkpoint_receipts:
-    - checkpoint_id: "design_review_001"
-      timestamp: "2026-03-28T15:00:00Z"
-      approver: "design_lead"
-      status: "approved"
-      artifacts_hashes: ["sha256:abc123..."]
-  
-  artifact_registry:
-    - artifact_id: "ui-design-v1.0"
-      path: "artifacts/ui/"
-      hash: "sha256:def456..."
-      created_at: "2026-03-28T12:00:00Z"
-      owner: "designer_agent"
-  
-  execution_metrics:
-    duration: "1.5h"
-    tokens_used: 35000
-    files_created: 12
-    files_modified: 3
-    test_coverage: 85
+
+#### 3.4.1 字段详解
+
+**execution_summary**：执行摘要，记录任务执行的基本信息。
+
+```yaml
+execution_summary:
+  executing_agent: "designer_agent"  # 执行 Agent 标识（必需）
+  execution_start: "2026-03-28T10:00:00Z"  # 执行开始时间（必需）
+  execution_end: "2026-03-28T11:30:00Z"    # 执行结束时间（必需）
+  actual_effort: "1.5小时"                 # 实际工作量（推荐）
+  tasks_completed:                        # 已完成任务列表（推荐）
+    - "生成首页组件"
+    - "生成商品列表页组件"
+  tasks_skipped:                          # 跳过任务列表（可选）
+    - task: "生成商品详情页组件"
+      reason: "PRD 中未明确需求"
+```
+
+**execution_metrics**：执行指标，记录执行过程的统计信息。
+
+```yaml
+execution_metrics:
+  duration: "1.5h"           # 实际执行时长（推荐）
+  tokens_used: 35000         # Token 消耗（可选）
+  files_created: 12          # 创建文件数（推荐）
+  files_modified: 3          # 修改文件数（推荐）
+  test_coverage: 85          # 测试覆盖率（可选）
+```
+
+**output_artifacts**：输出工件，记录实际产出的文件清单。
+
+```yaml
+output_artifacts:
+  - path: "artifacts/ui/"           # 工件路径（必需）
+    description: "UI 页面代码"       # 工件描述（必需）
+    status: "completed"             # 状态：completed | partial | failed（必需）
+    hash: "sha256:def456..."        # 哈希校验（可选）
+  - path: "artifacts/design-report.md"
+    description: "设计决策报告"
+    status: "completed"
+```
+
+**quality_verification**：质量验证，记录验收标准的验证结果。
+
+```yaml
+quality_verification:
+  - criteria: "所有 PRD 页面已实现"  # 验证标准（必需）
+    status: "passed"                # passed | failed | skipped（必需）
+    evidence: "PRD 列出 3 个页面，实现 3 个页面"  # 验证证据（推荐）
+  - criteria: "设计系统 lint 检查"
+    status: "passed"
+    evidence: "lint 输出：0 errors, 2 warnings"
+- criteria: "响应式布局"
+    status: "passed"
+    evidence: "覆盖 320px-1920px 断点"
   ```
+
+  **knowledge_capture**：知识捕获，记录任务执行中发现的新知识【v3.3新增】。
+
+  ```yaml
+  knowledge_capture:
+    discoveries:                      # 任务中发现的知识
+      - type: "terminology"           # terminology | pattern | solution | nuance | warning
+        content: "RPD在内部指'Requirement Planning Document'"
+        context: "在需求评审会议中发现"
+        confidence: 0.95
+        reusable: true
+        suggested_action: "add_to_terminology_database"
+      
+      - type: "pattern"
+        content: "用户在移动端更倾向于滑动而非点击"
+        context: "分析用户行为数据时发现"
+        confidence: 0.85
+        reusable: true
+        suggested_action: "update_design_guidelines"
+      
+      - type: "solution"
+        content: "使用防抖处理搜索输入，减少API调用"
+        context: "解决搜索框性能问题时发现"
+        confidence: 0.90
+        reusable: true
+        suggested_action: "add_to_best_practices"
+      
+      - type: "nuance"
+        content: "企业客户的审批流程需要多级嵌套"
+        context: "在权限设计时发现"
+        confidence: 0.80
+        reusable: true
+        suggested_action: "update_domain_knowledge"
+      
+      - type: "warning"
+        content: "第三方库X在特定场景下有内存泄漏"
+        context: "性能测试时发现"
+        confidence: 0.95
+        reusable: true
+        suggested_action: "add_to_known_issues"
+    
+    suggestions:                      # 知识库改进建议
+      - area: "terminology"
+        suggestion: "增加'跑批'的正式术语定义"
+        priority: "medium"
+        reason: "多次在任务中出现歧义"
+      
+      - area: "similar_tasks"
+        suggestion: "增加电商促销类任务的参考案例"
+        priority: "high"
+        reason: "促销活动任务频繁，经验复用价值高"
+      
+      - area: "domain_nuances"
+        suggestion: "补充企业客户的权限模型说明"
+        priority: "high"
+        reason: "影响多个功能模块的设计"
+  ```
+
+  **设计理念**（基于隐性知识显性化与知识演化理论）：
+  1. **知识发现**：从任务执行中识别有价值的隐性知识
+  2. **结构化提取**：将隐性知识转化为可复用的结构化形式
+  3. **置信度评估**：量化知识的可靠性，支持过滤低质量发现
+  4. **行动建议**：指导知识如何纳入组织知识库
+  5. **反馈闭环**：知识改进建议驱动知识库持续优化
+
+  **知识类型说明**：
+  | 类型 | 说明 | 示例 | 典型置信度 |
+  |------|------|------|-----------|
+  | terminology | 新发现的术语/缩写含义 | "RPD=Requirement Planning Document" | 0.90+ |
+  | pattern | 可复用的模式/规律 | "移动端用户偏好滑动操作" | 0.70-0.90 |
+  | solution | 问题解决方案 | "防抖处理减少API调用" | 0.85+ |
+  | nuance | 领域特异性知识 | "企业客户需要多级审批" | 0.75+ |
+  | warning | 需要注意的风险/问题 | "第三方库X有内存泄漏" | 0.90+ |
+
+  **与企业知识管理的映射**：
+  | knowledge_capture 字段 | 知识管理理论 | 企业实践案例 |
+  |------------------------|--------------|--------------|
+  | discoveries | SECI模型社会化→外显化 | Toyota经验沉淀、GE最佳实践提取 |
+  | suggestions | 知识库持续优化 | IBM知识图谱更新、Siemens知识质量管理 |
+
+  **使用场景**：
+  1. 任务执行完成后，自动提取发现的知识
+  2. 知识质量评估后，决定是否纳入知识库
+  3. 知识库管理员审核knowledge_capture报告
+  4. 高置信度知识自动更新到knowledge_context模板
+
+  #### 3.4.2 完整示例
+
+```yaml
+# execution_report Profile 完整示例
+execution_summary:
+  executing_agent: "designer_agent"
+  execution_start: "2026-03-28T10:00:00Z"
+  execution_end: "2026-03-28T11:30:00Z"
+  actual_effort: "1.5小时"
+  tasks_completed:
+    - "生成首页组件"
+    - "生成商品列表页组件"
+    - "生成商品详情页组件"
+  tasks_skipped: []
+
+execution_metrics:
+  duration: "1.5h"
+  tokens_used: 35000
+  files_created: 12
+  files_modified: 3
+  test_coverage: 85
+
+output_artifacts:
+  - path: "artifacts/ui/"
+    description: "UI 页面代码"
+    status: "completed"
+    hash: "sha256:def456..."
+  - path: "artifacts/design-report.md"
+    description: "设计决策报告"
+    status: "completed"
+
+quality_verification:
+  - criteria: "所有 PRD 页面已实现"
+    status: "passed"
+    evidence: "PRD 列出 3 个页面，实现 3 个页面"
+  - criteria: "设计系统 lint 检查"
+    status: "passed"
+    evidence: "lint 输出：0 errors, 2 warnings"
+  - criteria: "响应式布局"
+    status: "passed"
+    evidence: "覆盖 320px-1920px 断点"
+```
+
+#### 3.4.3 Profile 演进流程
+
+```
+planning.aes.yaml
+    │
+    │ Agent 开始执行
+    ▼
+handoff.aes.yaml（可选，如需交接）
+    │
+    │ Agent 完成任务
+    ▼
+execution_report.aes.yaml（必需）
+    │
+    │ 更新 meta.aes_profile = "execution_report"
+    │ 填写 execution_summary, execution_metrics, output_artifacts
+    │ 填写 quality_verification 验证结果
+    ▼
+归档
+```
+
+**演进规则**：
+1. 任务完成后，必须将 AES 文件演进到 execution_report Profile
+2. 更新 `meta.aes_profile` 为 `"execution_report"`
+3. 填写 `execution_summary`（必需字段：executing_agent, execution_start, execution_end）
+4. 填写 `output_artifacts`（每个工件必需：path, description, status）
+5. 填写 `quality_verification`（每个标准必需：criteria, status）
   
   ---
   
@@ -930,8 +1309,8 @@ guide_content: |
   ```json
   {
     "$schema": "http://json-schema.org/draft-2020-12/schema",
-    "$id": "https://example.com/aes-schema/v3.0.json",
-    "title": "AES v3.0 Schema",
+    "$id": "https://example.com/aes-schema/v3.3.json",
+    "title": "AES v3.3 Schema",
     "type": "object",
     "required": ["identity", "input_contract", "output_contract", "execution_constraints", "execution_prompt"],
     "properties": {
@@ -994,6 +1373,53 @@ guide_content: |
         "properties": {
           "deviation_detection": { "type": "array" },
           "fallback": { "type": "array" }
+        }
+      },
+      "execution_summary": {
+        "type": "object",
+        "required": ["executing_agent", "execution_start", "execution_end"],
+        "properties": {
+          "executing_agent": { "type": "string" },
+          "execution_start": { "type": "string", "format": "date-time" },
+          "execution_end": { "type": "string", "format": "date-time" },
+          "actual_effort": { "type": "string" },
+          "tasks_completed": { "type": "array" },
+          "tasks_skipped": { "type": "array" }
+        }
+      },
+      "execution_metrics": {
+        "type": "object",
+        "properties": {
+          "duration": { "type": "string" },
+          "tokens_used": { "type": "integer" },
+          "files_created": { "type": "integer" },
+          "files_modified": { "type": "integer" },
+          "test_coverage": { "type": "integer" }
+        }
+      },
+      "output_artifacts": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["path", "description", "status"],
+          "properties": {
+            "path": { "type": "string" },
+            "description": { "type": "string" },
+            "status": { "type": "string", "enum": ["completed", "partial", "failed"] },
+            "hash": { "type": "string" }
+          }
+        }
+      },
+      "quality_verification": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "required": ["criteria", "status"],
+          "properties": {
+            "criteria": { "type": "string" },
+            "status": { "type": "string", "enum": ["passed", "failed", "skipped"] },
+            "evidence": { "type": "string" }
+          }
         }
       }
     }
@@ -1078,7 +1504,7 @@ guide_content: |
               print(f"  - {err}")
           sys.exit(1)
       else:
-          print("✅ AES v3.0 structure is valid")
+          print("✅ AES v3.3 structure is valid")
           sys.exit(0)
   ```
   
@@ -1137,20 +1563,128 @@ guide_content: |
   - 由管理层 Agent 撰写
   - 分发给执行层 Agent 执行
   - 存储在 runtime/aes/instances/
+
+  ### §8.2 版本号管理规则
+
+  #### 8.2.1 语义化版本规范
+
+  AES 规范采用语义化版本：MAJOR.MINOR.PATCH
+
+  | 版本类型 | 变更类型 | 示例 |
+  |---------|---------|------|
+  | MAJOR | 不兼容的结构性变更 | 3.0.0 → 4.0.0（新增必需字段） |
+  | MINOR | 向后兼容的功能新增 | 3.1.0 → 3.2.0（新增可选字段） |
+  | PATCH | 向后兼容的问题修复 | 3.1.0 → 3.1.1（修正错误、补充说明） |
+
+  #### 8.2.2 修订时必做事项
+
+  修订 AES 规范时，**必须**同步更新以下内容：
+
+  ```yaml
+  # 1. 更新 meta.version
+  meta:
+    version: "3.3.0"  # 从 3.2.0 更新
+
+  # 2. 更新 meta.updated_at
+  meta:
+    updated_at: "2026-03-28T17:00:00Z"
+
+  # 3. 新增修订日志条目（见 §8.3）
+  revision_log:
+    - version: "3.2.0"
+      date: "2026-03-28"
+      changes: ["新增 execution_report 阶段完整字段定义", "新增版本号管理规则"]
+  ```
+
+  #### 8.2.3 版本更新检查清单
+
+  - [ ] 修订内容是否影响向后兼容性？
+  - [ ] 是否需要更新 MAJOR 版本？
+  - [ ] 是否需要更新 MINOR 版本？
+  - [ ] meta.version 是否已更新？
+  - [ ] meta.updated_at 是否已更新？
+  - [ ] 修订日志是否已更新？
+
+  ### §8.3 修订日志
+
+  AES 规范维护修订日志，记录每次变更：
+
+  ```yaml
+  revision_log:
+    - version: "3.3.0"
+      date: "2026-03-28"
+      author: "chief_architect"
+      changes:
+        - "新增 §2.2.3 knowledge_context 字段（背景知识上下文）"
+        - "新增 §3.4.1 knowledge_capture 字段（知识捕获）"
+        - "完善 §2.1 完整结构概览，新增知识管理相关字段"
+        - "集成隐性知识显性化理论（基于SECI模型和知识演化研究）"
+        - "新增与企业知识管理实践的映射（Toyota、IBM、Siemens案例）"
+      compatibility: "backward_compatible"
+    
+    - version: "3.2.0"
+      date: "2026-03-28"
+      author: "technical_writer_agent"
+      changes:
+        - "新增 §2.1 execution_report 阶段完整字段定义"
+        - "完善 §3.4 Execution Report Profile 字段详解和示例"
+        - "新增 §8.2 版本号管理规则"
+        - "新增 §8.3 修订日志"
+      compatibility: "backward_compatible"
+    
+    - version: "3.1.0"
+      date: "2026-03-28"
+      author: "chief_architect"
+      changes:
+        - "新增 change_management 字段"
+        - "新增 workflow_chain_id 和 child_nodes 字段"
+      compatibility: "backward_compatible"
+    
+    - version: "3.0.0"
+      date: "2026-03-27"
+      author: "chief_architect"
+      changes:
+        - "从任务规划文档升级为工作流节点执行包"
+        - "新增 input_contract, output_contract 字段"
+        - "新增 execution_constraints, execution_prompt 字段"
+        - "新增 safeguards 防偏离机制"
+      compatibility: "breaking"
+  ```
+
+  **修订日志字段说明**：
+  - `version`: 修订后的版本号
+  - `date`: 修订日期
+  - `author`: 修订者
+  - `changes`: 变更内容列表
+  - `compatibility`: 兼容性类型（backward_compatible | breaking）
   
   ---
   
-  ## 附录：快速参考卡
-  
+## 附录：快速参考卡
+
   ```
-  AES v3.0 工作流节点执行包 = {
+  AES v3.3 工作流节点执行包 = {
+    // Planning 阶段必需
     identity:           节点身份（谁执行、预计时长）
     input_contract:     输入契约（需要什么、禁止假设什么）
+      └─ knowledge_context: 背景知识上下文（术语、行话、背景链接）【v3.3新增】
     output_contract:    输出契约（产出什么、验收标准）
     execution_constraints: 执行约束（必须遵守、禁止行为）
     execution_prompt:   执行提示词（唯一指令）
     checkpoint:         检查点（质量门禁）
-    safeguards:         风险预防（防偏离规则）
+    safeguards:         防偏离规则（运行时拦截）
+    change_management:  变更管理（工作流链一致性）
+    
+    // Handoff 阶段新增
+    state_snapshot:     状态快照（中断恢复用）
+    handoff_contract:   交接契约（启动顺序、验证清单）
+    
+    // Execution Report 阶段新增
+    execution_summary:  执行摘要（谁执行、时长、完成情况）
+    execution_metrics:  执行指标（统计信息）
+    output_artifacts:   输出工件（实际产出）
+    quality_verification: 质量验证（验证结果）
+    knowledge_capture:  知识捕获（发现的知识、改进建议）【v3.3新增】
   }
   
   核心原则：
@@ -1158,6 +1692,8 @@ guide_content: |
   2. 最小提示词：Agent 只需读 AES
   3. 防偏离：明确定义 must_follow 和 must_not
   4. 可拦截：运行时监控并拦截
+  5. 可演进：Profile 演进 planning → handoff → execution_report
+  6. 知识传递：通过 knowledge_context 传递背景，通过 knowledge_capture 捕获新知【v3.3新增】
   
   文件命名：aes-{sequence}-{short-name}.yaml
   文件位置：runtime/aes/instances/
@@ -1166,7 +1702,7 @@ guide_content: |
   
   ---
   
-  *指南版本*: 3.0.0
+   *指南版本*: 3.3.0
   *创建日期*: 2026-03-28
   *基于*: 3.9.2_AES_Workflow_Node_Packaging_Design_Philosophy.md
   *适用范围*: 管理层 Agent 撰写 AES、执行层 Agent 执行 AES
@@ -1179,7 +1715,7 @@ governance:
 
 # ========== 9. Risks (RECOMMENDED) ==========
 risks:
-  - issue: "管理层 Agent 不熟悉 AES v3.0 格式"
+     - issue: "管理层 Agent 不熟悉 AES v3.3 格式"
     severity: "medium"
     mitigation: "提供模板和示例，逐步培训"
     status: "pending"
