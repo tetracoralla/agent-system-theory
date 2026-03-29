@@ -1,23 +1,25 @@
-# AES (Agent-Executable Specification) v3.3
+# AES (Agent-Executable Specification) v3.4
 # File: AES_Task_Specification_Writing_Guide.aes.yaml
+# Copyright (c) 2026 openAdam. Licensed under CC BY 4.0.
+# Attribution requirement: Author: openAdam | Source: agent-system-theory
 # Purpose: 定义 AES 作为工作流节点执行包规范，支持 Agent 高效执行、防止偏离、
 #          多 Agent 协作、任务连续性、企业工作流编排和变更管理
 
 # ========== 1. Metadata (REQUIRED) ==========
 meta:
   task_id: "task_20260328_aes_guide_v3"
-task_name: "AES 工作流节点执行包写作指南 v3.3"
-  version: "3.3.0"
+task_name: "AES 工作流节点执行包写作指南 v3.4"
+  version: "3.4.0"
   created_at: "2026-03-28T00:00:00Z"
   updated_at: "2026-03-28T12:00:00Z"
-  from_agent: "chief_architect"
+  from_agent: "openAdam"
   to_agent: "management_layer_agents"
   session_id: "aes_guide_v3_session"
   parent_task_id: null
   document_type: "reference_guide"
   target_agents: ["product_manager_agent", "project_manager_agent", "technical_lead_agent", "workflow_orchestrator"]
   aes_profile: "planning"
-  schema_version: "3.3.0"
+  schema_version: "3.4.0"
 
 # ========== 2. Status (REQUIRED) ==========
 status:
@@ -60,7 +62,7 @@ background:
     4. 防偏离机制（safeguards）
     导致 Agent 执行时需要额外找文档、容易偏离、难以拦截。
   context_summary: |
-    AES v3.3 定位为"工作流节点执行包"，每个 AES 是一个完整的工作流节点，
+    AES v3.4 定位为"工作流节点执行包"，每个 AES 是一个完整的工作流节点，
     由管理层 Agent（产品经理、项目经理等）撰写，分发给执行层 Agent 执行。
     核心原则：自包含、最小提示词、防止偏离。
 
@@ -86,14 +88,14 @@ references:
 artifacts:
   files_created:
     - path: "AES_Task_Specification_Writing_Guide.aes.yaml"
-      description: "本文档，AES v3.3 写作指南"
+      description: "本文档，AES v3.4 写作指南"
       status: "completed"
   files_modified: []
   decisions_made: []
 
 # ========== 7. Guide Content ==========
 guide_content: |
-  ========== AES v3.3 工作流节点执行包写作指南 ==========
+  ========== AES v3.4 工作流节点执行包写作指南 ==========
   
   ## 第一章：核心概念
   
@@ -171,7 +173,7 @@ guide_content: |
   ### 2.1 完整结构概览
   
   ```yaml
-  # AES v3.3 工作流节点执行包结构
+  # AES v3.4 工作流节点执行包结构
   
   # === 身份与边界 ===
   identity:                    # 节点身份定义
@@ -186,7 +188,7 @@ guide_content: |
     required_artifacts: [...]  # 必需的输入工件
     required_context: [...]    # 必需的上下文
     forbidden_assumptions: [...] # 禁止的假设
-    knowledge_context:         # 背景知识上下文（v3.3新增）
+    knowledge_context:         # 背景知识上下文（v3.3版本新增）
       terminology: [...]       # 术语/缩写解释
       internal_lingo: [...]    # 内部行话/黑话
       background_links: [...]  # 相关背景链接
@@ -254,7 +256,7 @@ quality_verification:
         status: string               # passed | failed | skipped
         evidence: string             # 验证证据（可选）
 
-    # === 知识捕获（execution_report Profile 可选字段，v3.3新增）===
+    # === 知识捕获（execution_report Profile 可选字段，v3.3版本新增）===
     knowledge_capture:
       discoveries:                   # 任务中发现的知识
         - type: string               # terminology | pattern | solution | nuance
@@ -356,9 +358,9 @@ quality_verification:
   **关键作用**：
   1. Agent 启动前验证所有输入是否就绪
   2. 明确告诉 Agent "不要假设什么"，防止过度发挥
-  3. 提供背景知识，帮助 Agent 理解企业特定语境（v3.3新增）
+  3. 提供背景知识，帮助 Agent 理解企业特定语境（v3.3版本新增）
 
-  #### 2.2.3 knowledge_context（背景知识上下文）【v3.3新增】
+  #### 2.2.3 knowledge_context（背景知识上下文）【v3.3版本新增】
 
   **定义任务执行所需的背景知识，实现隐性知识的显性传递**。
 
@@ -741,7 +743,7 @@ quality_verification:
     evidence: "覆盖 320px-1920px 断点"
   ```
 
-  **knowledge_capture**：知识捕获，记录任务执行中发现的新知识【v3.3新增】。
+  **knowledge_capture**：知识捕获，记录任务执行中发现的新知识【v3.3版本新增】。
 
   ```yaml
   knowledge_capture:
@@ -1309,8 +1311,8 @@ execution_report.aes.yaml（必需）
   ```json
   {
     "$schema": "http://json-schema.org/draft-2020-12/schema",
-    "$id": "https://example.com/aes-schema/v3.3.json",
-    "title": "AES v3.3 Schema",
+    "$id": "https://example.com/aes-schema/v3.4.json",
+    "title": "AES v3.4 Schema",
     "type": "object",
     "required": ["identity", "input_contract", "output_contract", "execution_constraints", "execution_prompt"],
     "properties": {
@@ -1504,7 +1506,7 @@ execution_report.aes.yaml（必需）
               print(f"  - {err}")
           sys.exit(1)
       else:
-          print("✅ AES v3.3 structure is valid")
+          print("✅ AES v3.4 structure is valid")
           sys.exit(0)
   ```
   
@@ -1583,7 +1585,7 @@ execution_report.aes.yaml（必需）
   ```yaml
   # 1. 更新 meta.version
   meta:
-    version: "3.3.0"  # 从 3.2.0 更新
+    version: "3.4.0"  # 从 3.3.0 更新
 
   # 2. 更新 meta.updated_at
   meta:
@@ -1611,9 +1613,17 @@ execution_report.aes.yaml（必需）
 
   ```yaml
   revision_log:
+    - version: "3.4.0"
+      date: "2026-03-29"
+      author: "openAdam"
+      changes:
+        - "版本号从 3.3.0 更新为 3.4.0"
+        - "统一文档中所有当前版本引用为 v3.4"
+      compatibility: "backward_compatible"
+    
     - version: "3.3.0"
       date: "2026-03-28"
-      author: "chief_architect"
+      author: "openAdam"
       changes:
         - "新增 §2.2.3 knowledge_context 字段（背景知识上下文）"
         - "新增 §3.4.1 knowledge_capture 字段（知识捕获）"
@@ -1624,7 +1634,7 @@ execution_report.aes.yaml（必需）
     
     - version: "3.2.0"
       date: "2026-03-28"
-      author: "technical_writer_agent"
+      author: "openAdam"
       changes:
         - "新增 §2.1 execution_report 阶段完整字段定义"
         - "完善 §3.4 Execution Report Profile 字段详解和示例"
@@ -1634,7 +1644,7 @@ execution_report.aes.yaml（必需）
     
     - version: "3.1.0"
       date: "2026-03-28"
-      author: "chief_architect"
+      author: "openAdam"
       changes:
         - "新增 change_management 字段"
         - "新增 workflow_chain_id 和 child_nodes 字段"
@@ -1642,7 +1652,7 @@ execution_report.aes.yaml（必需）
     
     - version: "3.0.0"
       date: "2026-03-27"
-      author: "chief_architect"
+      author: "openAdam"
       changes:
         - "从任务规划文档升级为工作流节点执行包"
         - "新增 input_contract, output_contract 字段"
@@ -1663,11 +1673,11 @@ execution_report.aes.yaml（必需）
 ## 附录：快速参考卡
 
   ```
-  AES v3.3 工作流节点执行包 = {
+  AES v3.4 工作流节点执行包 = {
     // Planning 阶段必需
     identity:           节点身份（谁执行、预计时长）
     input_contract:     输入契约（需要什么、禁止假设什么）
-      └─ knowledge_context: 背景知识上下文（术语、行话、背景链接）【v3.3新增】
+      └─ knowledge_context: 背景知识上下文（术语、行话、背景链接）【v3.3版本新增】
     output_contract:    输出契约（产出什么、验收标准）
     execution_constraints: 执行约束（必须遵守、禁止行为）
     execution_prompt:   执行提示词（唯一指令）
@@ -1684,7 +1694,7 @@ execution_report.aes.yaml（必需）
     execution_metrics:  执行指标（统计信息）
     output_artifacts:   输出工件（实际产出）
     quality_verification: 质量验证（验证结果）
-    knowledge_capture:  知识捕获（发现的知识、改进建议）【v3.3新增】
+    knowledge_capture:  知识捕获（发现的知识、改进建议）【v3.3版本新增】
   }
   
   核心原则：
@@ -1693,7 +1703,7 @@ execution_report.aes.yaml（必需）
   3. 防偏离：明确定义 must_follow 和 must_not
   4. 可拦截：运行时监控并拦截
   5. 可演进：Profile 演进 planning → handoff → execution_report
-  6. 知识传递：通过 knowledge_context 传递背景，通过 knowledge_capture 捕获新知【v3.3新增】
+  6. 知识传递：通过 knowledge_context 传递背景，通过 knowledge_capture 捕获新知【v3.3版本新增】
   
   文件命名：aes-{sequence}-{short-name}.yaml
   文件位置：runtime/aes/instances/
@@ -1702,7 +1712,7 @@ execution_report.aes.yaml（必需）
   
   ---
   
-   *指南版本*: 3.3.0
+   *指南版本*: 3.4.0
   *创建日期*: 2026-03-28
   *基于*: 3.9.2_AES_Workflow_Node_Packaging_Design_Philosophy.md
   *适用范围*: 管理层 Agent 撰写 AES、执行层 Agent 执行 AES
@@ -1711,11 +1721,11 @@ execution_report.aes.yaml（必需）
 governance:
   audit_trail_id: "aes_guide_v3"
   risk_level: "L3"
-  approval_required: ["chief_architect"]
+  approval_required: ["openAdam"]
 
 # ========== 9. Risks (RECOMMENDED) ==========
 risks:
-     - issue: "管理层 Agent 不熟悉 AES v3.3 格式"
+     - issue: "管理层 Agent 不熟悉 AES v3.4 格式"
     severity: "medium"
     mitigation: "提供模板和示例，逐步培训"
     status: "pending"
